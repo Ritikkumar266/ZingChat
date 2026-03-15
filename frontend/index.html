@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZingChat - Realtime Chat</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="chat-container">
+    <!-- Auth Screen -->
+    <div id="authScreen" class="screen active">
+      <div class="auth-box">
+        <h1>ZingChat</h1>
+        
+        <!-- Login Form -->
+        <div id="loginForm" class="auth-form active">
+          <h2>Login</h2>
+          <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+          <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+          <button id="loginBtn">Login</button>
+          <p>Don't have an account? <a href="#" onclick="toggleAuthForm()">Sign up</a></p>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" class="auth-form">
+          <h2>Sign Up</h2>
+          <input type="email" id="registerEmail" placeholder="Email" autocomplete="email">
+          <button id="sendOtpBtn" style="background: #4caf50; margin-bottom: 10px;">Send OTP</button>
+          <input type="text" id="otpInput" placeholder="Enter OTP" style="display: none;">
+          <button id="verifyOtpBtn" style="background: #2196F3; display: none; margin-bottom: 10px;">Verify OTP</button>
+          <input type="text" id="registerUsername" placeholder="Username" autocomplete="username" style="display: none;">
+          <input type="password" id="registerPassword" placeholder="Password" autocomplete="new-password" style="display: none;">
+          <input type="password" id="registerConfirm" placeholder="Confirm Password" autocomplete="new-password" style="display: none;">
+          <button id="registerBtn" style="display: none;">Sign Up</button>
+          <p>Already have an account? <a href="#" onclick="toggleAuthForm()">Login</a></p>
+        </div>
+
+        <div id="authError" class="error-message"></div>
+      </div>
+    </div>
+
+    <!-- Chat Screen -->
+    <div id="chatScreen" class="screen">
+      <div class="chat-header">
+        <div class="header-left">
+          <h2>Chat Room</h2>
+        </div>
+        <div class="header-right">
+          <button id="themeToggle" class="theme-btn" title="Toggle dark mode">🌙</button>
+          <button id="logoutBtn" class="logout-btn">Logout</button>
+        </div>
+      </div>
+
+      <div class="chat-main">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <h3>Online Users</h3>
+            <span id="userCount" class="user-count">0</span>
+          </div>
+          <div id="usersList" class="users-list"></div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+          <div class="chat-content">
+            <div id="messagesList" class="messages-list"></div>
+            <div id="typingIndicator" class="typing-indicator"></div>
+          </div>
+
+          <div class="chat-footer">
+            <div class="input-group">
+              <input 
+                type="text" 
+                id="messageInput" 
+                placeholder="Type a message..." 
+                autocomplete="off"
+              >
+              <label for="fileInput" class="file-btn" title="Share file">📎</label>
+              <input type="file" id="fileInput" style="display: none;">
+              <button id="sendBtn">Send</button>
+            </div>
+            <div id="uploadProgress" class="upload-progress" style="display: none;">
+              <div class="progress-bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div id="notification" class="notification"></div>
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
