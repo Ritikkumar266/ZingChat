@@ -430,6 +430,9 @@ function displayMessage(message) {
   const isOwn = message.userId === currentUser?.id;
   messageEl.className = `message ${isOwn ? 'own' : 'other'}`;
 
+  const username = message.senderUsername || message.username || 'Unknown';
+  const timestamp = formatTime(message.timestamp);
+
   if (message.fileUrl) {
     const fileIcon = getFileIcon(message.fileType);
     messageEl.innerHTML = `
@@ -440,12 +443,12 @@ function displayMessage(message) {
           <a href="${message.fileUrl}" download class="file-download">Download</a>
         </div>
       </div>
-      <div class="message-meta">${message.senderUsername} • ${formatTime(message.timestamp)}</div>
+      <div class="message-meta">${username} • ${timestamp}</div>
     `;
   } else {
     messageEl.innerHTML = `
       <div class="message-content">${escapeHtml(message.text)}</div>
-      <div class="message-meta">${message.senderUsername} • ${formatTime(message.timestamp)}</div>
+      <div class="message-meta">${username} • ${timestamp}</div>
     `;
   }
 
