@@ -20,6 +20,20 @@
           <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
           <button id="loginBtn">Login</button>
           <p>Don't have an account? <a href="#" onclick="toggleAuthForm()">Sign up</a></p>
+          <p style="text-align: center; margin-top: 10px;"><a href="#" onclick="showForgotPassword()" style="font-size: 12px; color: #667eea;">Forgot Password?</a></p>
+        </div>
+
+        <!-- Forgot Password Form -->
+        <div id="forgotPasswordForm" class="auth-form">
+          <h2>Reset Password</h2>
+          <input type="email" id="forgotEmail" placeholder="Enter your email" autocomplete="email">
+          <button id="sendResetBtn" style="background: #4caf50; margin-bottom: 10px;">Send Reset Link</button>
+          <input type="text" id="resetOtpInput" placeholder="Enter OTP" style="display: none;">
+          <button id="verifyResetOtpBtn" style="background: #2196F3; display: none; margin-bottom: 10px;">Verify OTP</button>
+          <input type="password" id="newPasswordInput" placeholder="New Password" style="display: none;">
+          <input type="password" id="confirmPasswordInput" placeholder="Confirm Password" style="display: none;">
+          <button id="resetPasswordBtn" style="display: none;">Reset Password</button>
+          <p><a href="#" onclick="backToLogin()" style="font-size: 12px; color: #667eea;">Back to Login</a></p>
         </div>
 
         <!-- Register Form -->
@@ -56,33 +70,47 @@
         <!-- Sidebar -->
         <div class="sidebar">
           <div class="sidebar-header">
-            <h3>Online Users</h3>
-            <span id="userCount" class="user-count">0</span>
+            <h3>Conversations</h3>
           </div>
-          <div id="usersList" class="users-list"></div>
+          <div id="conversationsList" class="users-list"></div>
+          
+          <div class="sidebar-header" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 10px;">
+            <h3>All Users</h3>
+          </div>
+          <div id="allUsersList" class="users-list"></div>
         </div>
 
         <!-- Chat Area -->
         <div class="chat-area">
-          <div class="chat-content">
-            <div id="messagesList" class="messages-list"></div>
-            <div id="typingIndicator" class="typing-indicator"></div>
+          <div id="noChatSelected" style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light);">
+            <p>Select a user to start chatting</p>
           </div>
-
-          <div class="chat-footer">
-            <div class="input-group">
-              <input 
-                type="text" 
-                id="messageInput" 
-                placeholder="Type a message..." 
-                autocomplete="off"
-              >
-              <label for="fileInput" class="file-btn" title="Share file">📎</label>
-              <input type="file" id="fileInput" style="display: none;">
-              <button id="sendBtn">Send</button>
+          
+          <div id="chatWindow" style="display: none; flex-direction: column; height: 100%;">
+            <div class="chat-header" style="background: var(--bg-secondary); color: var(--text); border-bottom: 1px solid var(--border);">
+              <h3 id="chatWithName" style="margin: 0;"></h3>
             </div>
-            <div id="uploadProgress" class="upload-progress" style="display: none;">
-              <div class="progress-bar"></div>
+            
+            <div class="chat-content">
+              <div id="messagesList" class="messages-list"></div>
+              <div id="typingIndicator" class="typing-indicator"></div>
+            </div>
+
+            <div class="chat-footer">
+              <div class="input-group">
+                <input 
+                  type="text" 
+                  id="messageInput" 
+                  placeholder="Type a message..." 
+                  autocomplete="off"
+                >
+                <label for="fileInput" class="file-btn" title="Share file">📎</label>
+                <input type="file" id="fileInput" style="display: none;">
+                <button id="sendBtn">Send</button>
+              </div>
+              <div id="uploadProgress" class="upload-progress" style="display: none;">
+                <div class="progress-bar"></div>
+              </div>
             </div>
           </div>
         </div>

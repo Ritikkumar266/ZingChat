@@ -12,6 +12,8 @@ const fs = require('fs');
 const User = require('./models/User');
 const Message = require('./models/Message');
 const OTP = require('./models/OTP');
+const PasswordReset = require('./models/PasswordReset');
+const PrivateMessage = require('./models/PrivateMessage');
 const authMiddleware = require('./middleware/auth');
 const { sendOTP, generateOTP } = require('./services/emailService');
 
@@ -178,7 +180,100 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Forgot Password - Send OTP
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email required' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: 'Email not found' });
+    }
+
+    const otp = generateOTP();
+    await PasswordReset.deleteMany({ email });
+    await PasswordReset.create({ email, otp });
+
+    const result = await sendOTP(email, otp);
+    if (!result.success) {
+      return res.status(500).json({ error: 'Failed to send OTP' });
+    }
+
+    res.json({ message: 'OTP sent to your email' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Verify Reset OTP
+app.post('/api/auth/verify-reset-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and OTP required' });
+    }
+
+    const resetRecord = await PasswordReset.findOne({ email, otp });
+    if (!resetRecord) {
+      return res.status(401).json({ error: 'Invalid or expired OTP' });
+    }
+
+    res.json({ message: 'OTP verified successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset Password
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ error: 'All fields required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    const resetRecord = await PasswordReset.findOne({ email, otp });
+    if (!resetRecord) {
+      return res.status(401).json({ error: 'Invalid or expired OTP' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    await PasswordReset.deleteOne({ _id: resetRecord._id });
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============ MESSAGE ROUTES ============
+
+// Get all users
+app.get('/api/users', authMiddleware, async (req, res) => {
+  try {
+    const users = await User.find({}, 'username email createdAt').lean();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Get message history
 app.get('/api/messages', authMiddleware, async (req, res) => {
@@ -206,6 +301,61 @@ app.post('/api/upload', authMiddleware, upload.single('file'), (req, res) => {
       fileName: req.file.originalname,
       fileType: req.file.mimetype
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get private messages between two users
+app.get('/api/private-messages/:userId', authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.userId;
+
+    const messages = await PrivateMessage.find({
+      $or: [
+        { sender: currentUserId, receiver: userId },
+        { sender: userId, receiver: currentUserId }
+      ]
+    }).sort({ timestamp: 1 }).lean();
+
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Send private message
+app.post('/api/private-messages', authMiddleware, async (req, res) => {
+  try {
+    const { receiverId, text, fileUrl, fileName, fileType } = req.body;
+    const senderId = req.userId;
+
+    if (!receiverId) {
+      return res.status(400).json({ error: 'Receiver ID required' });
+    }
+
+    const sender = await User.findById(senderId);
+    const receiver = await User.findById(receiverId);
+
+    if (!receiver) {
+      return res.status(404).json({ error: 'Receiver not found' });
+    }
+
+    const message = new PrivateMessage({
+      sender: senderId,
+      receiver: receiverId,
+      senderUsername: sender.username,
+      receiverUsername: receiver.username,
+      text: text || '',
+      fileUrl: fileUrl || null,
+      fileName: fileName || null,
+      fileType: fileType || null
+    });
+
+    await message.save();
+
+    res.json(message);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

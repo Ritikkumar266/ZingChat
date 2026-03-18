@@ -1,11 +1,14 @@
 const socket = io();
 
-// DOM ELEMENTS - Wait for DOM to load
+// DOM ELEMENTS
 let authScreen, chatScreen, loginForm, registerForm, loginEmail, loginPassword, loginBtn;
 let registerUsername, registerEmail, registerPassword, registerConfirm, registerBtn, authError;
-let messageInput, sendBtn, messagesList, usersList, userCount, typingIndicator;
+let messageInput, sendBtn, messagesList, typingIndicator;
 let fileInput, themeToggle, logoutBtn, uploadProgress, progressBar, notification;
 let sendOtpBtn, verifyOtpBtn, otpInput;
+let forgotPasswordForm, forgotEmail, sendResetBtn, resetOtpInput, verifyResetOtpBtn;
+let newPasswordInput, confirmPasswordInput, resetPasswordBtn;
+let allUsersList, conversationsList, noChatSelected, chatWindow, chatWithName;
 
 // STATE
 let currentUser = null;
@@ -13,6 +16,8 @@ let token = null;
 let typingTimeout;
 let typingUsers = new Set();
 let otpVerified = false;
+let selectedUserId = null;
+let selectedUsername = null;
 
 // Initialize DOM elements
 function initDOM() {
@@ -20,6 +25,7 @@ function initDOM() {
   chatScreen = document.getElementById('chatScreen');
   loginForm = document.getElementById('loginForm');
   registerForm = document.getElementById('registerForm');
+  forgotPasswordForm = document.getElementById('forgotPasswordForm');
   loginEmail = document.getElementById('loginEmail');
   loginPassword = document.getElementById('loginPassword');
   loginBtn = document.getElementById('loginBtn');
@@ -32,8 +38,8 @@ function initDOM() {
   messageInput = document.getElementById('messageInput');
   sendBtn = document.getElementById('sendBtn');
   messagesList = document.getElementById('messagesList');
-  usersList = document.getElementById('usersList');
-  userCount = document.getElementById('userCount');
+  allUsersList = document.getElementById('allUsersList');
+  conversationsList = document.getElementById('conversationsList');
   typingIndicator = document.getElementById('typingIndicator');
   fileInput = document.getElementById('fileInput');
   themeToggle = document.getElementById('themeToggle');
@@ -44,20 +50,31 @@ function initDOM() {
   sendOtpBtn = document.getElementById('sendOtpBtn');
   verifyOtpBtn = document.getElementById('verifyOtpBtn');
   otpInput = document.getElementById('otpInput');
+  forgotEmail = document.getElementById('forgotEmail');
+  sendResetBtn = document.getElementById('sendResetBtn');
+  resetOtpInput = document.getElementById('resetOtpInput');
+  verifyResetOtpBtn = document.getElementById('verifyResetOtpBtn');
+  newPasswordInput = document.getElementById('newPasswordInput');
+  confirmPasswordInput = document.getElementById('confirmPasswordInput');
+  resetPasswordBtn = document.getElementById('resetPasswordBtn');
+  noChatSelected = document.getElementById('noChatSelected');
+  chatWindow = document.getElementById('chatWindow');
+  chatWithName = document.getElementById('chatWithName');
 
   attachEventListeners();
 }
 
 function attachEventListeners() {
-  // Auth events
   loginBtn.addEventListener('click', handleLogin);
   registerBtn.addEventListener('click', handleRegister);
   sendOtpBtn.addEventListener('click', handleSendOTP);
   verifyOtpBtn.addEventListener('click', handleVerifyOTP);
+  sendResetBtn.addEventListener('click', handleSendResetOTP);
+  verifyResetOtpBtn.addEventListener('click', handleVerifyResetOTP);
+  resetPasswordBtn.addEventListener('click', handleResetPassword);
   themeToggle.addEventListener('click', toggleTheme);
   logoutBtn.addEventListener('click', handleLogout);
 
-  // Message events
   sendBtn.addEventListener('click', sendMessage);
   messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -66,10 +83,7 @@ function attachEventListeners() {
     }
   });
 
-  // File upload
   fileInput.addEventListener('change', handleFileUpload);
-
-  // Typing
   messageInput.addEventListener('input', handleTyping);
 }
 
@@ -97,7 +111,6 @@ function toggleAuthForm() {
   registerForm.classList.toggle('active');
   authError.classList.remove('show');
   authError.textContent = '';
-  otpVerified = false;
 }
 
 function showAuthError(message) {
@@ -107,7 +120,6 @@ function showAuthError(message) {
 
 async function handleSendOTP() {
   const email = registerEmail.value.trim();
-
   if (!email) {
     showAuthError('Please enter email');
     return;
@@ -121,7 +133,6 @@ async function handleSendOTP() {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       showAuthError(data.error || 'Failed to send OTP');
       return;
@@ -129,7 +140,6 @@ async function handleSendOTP() {
 
     showAuthError('');
     showNotification('OTP sent to your email');
-    
     otpInput.style.display = 'block';
     verifyOtpBtn.style.display = 'block';
     sendOtpBtn.disabled = true;
@@ -156,7 +166,6 @@ async function handleVerifyOTP() {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       showAuthError(data.error || 'Invalid OTP');
       return;
@@ -165,12 +174,10 @@ async function handleVerifyOTP() {
     otpVerified = true;
     showAuthError('');
     showNotification('Email verified! Complete registration');
-    
     registerUsername.style.display = 'block';
     registerPassword.style.display = 'block';
     registerConfirm.style.display = 'block';
     registerBtn.style.display = 'block';
-    
     otpInput.style.display = 'none';
     verifyOtpBtn.style.display = 'none';
   } catch (error) {
@@ -195,7 +202,6 @@ async function handleLogin() {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       showAuthError(data.error || 'Login failed');
       return;
@@ -205,7 +211,6 @@ async function handleLogin() {
     currentUser = data.user;
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(currentUser));
-
     enterChat();
   } catch (error) {
     showAuthError('Connection error: ' + error.message);
@@ -246,7 +251,6 @@ async function handleRegister() {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       showAuthError(data.error || 'Registration failed');
       return;
@@ -256,7 +260,6 @@ async function handleRegister() {
     currentUser = data.user;
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(currentUser));
-
     enterChat();
   } catch (error) {
     showAuthError('Connection error: ' + error.message);
@@ -266,12 +269,7 @@ async function handleRegister() {
 function enterChat() {
   authScreen.classList.remove('active');
   chatScreen.classList.add('active');
-  
-  socket.emit('join', {
-    username: currentUser.username,
-    userId: currentUser.id
-  });
-
+  loadAllUsers();
   messageInput.focus();
 }
 
@@ -281,12 +279,14 @@ function handleLogout() {
   currentUser = null;
   token = null;
   otpVerified = false;
+  selectedUserId = null;
   
   authScreen.classList.add('active');
   chatScreen.classList.remove('active');
   
   messagesList.innerHTML = '';
-  usersList.innerHTML = '';
+  allUsersList.innerHTML = '';
+  conversationsList.innerHTML = '';
   messageInput.value = '';
   
   socket.disconnect();
@@ -300,19 +300,266 @@ function toggleTheme() {
   themeToggle.textContent = isDark ? '☀️' : '🌙';
 }
 
-// MESSAGE FUNCTIONS
-function sendMessage() {
+// FORGOT PASSWORD
+function showForgotPassword() {
+  loginForm.classList.remove('active');
+  forgotPasswordForm.classList.add('active');
+  authError.classList.remove('show');
+}
+
+function backToLogin() {
+  forgotPasswordForm.classList.remove('active');
+  loginForm.classList.add('active');
+  resetForgotPasswordForm();
+}
+
+function resetForgotPasswordForm() {
+  forgotEmail.value = '';
+  resetOtpInput.value = '';
+  newPasswordInput.value = '';
+  confirmPasswordInput.value = '';
+  resetOtpInput.style.display = 'none';
+  verifyResetOtpBtn.style.display = 'none';
+  newPasswordInput.style.display = 'none';
+  confirmPasswordInput.style.display = 'none';
+  resetPasswordBtn.style.display = 'none';
+  sendResetBtn.disabled = false;
+  forgotEmail.disabled = false;
+}
+
+async function handleSendResetOTP() {
+  const email = forgotEmail.value.trim();
+  if (!email) {
+    showAuthError('Please enter email');
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      showAuthError(data.error || 'Failed to send OTP');
+      return;
+    }
+
+    showAuthError('');
+    showNotification('OTP sent to your email');
+    resetOtpInput.style.display = 'block';
+    verifyResetOtpBtn.style.display = 'block';
+    sendResetBtn.disabled = true;
+    forgotEmail.disabled = true;
+  } catch (error) {
+    showAuthError('Error: ' + error.message);
+  }
+}
+
+async function handleVerifyResetOTP() {
+  const email = forgotEmail.value.trim();
+  const otp = resetOtpInput.value.trim();
+
+  if (!otp) {
+    showAuthError('Please enter OTP');
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/auth/verify-reset-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      showAuthError(data.error || 'Invalid OTP');
+      return;
+    }
+
+    showAuthError('');
+    showNotification('OTP verified! Enter new password');
+    newPasswordInput.style.display = 'block';
+    confirmPasswordInput.style.display = 'block';
+    resetPasswordBtn.style.display = 'block';
+    resetOtpInput.style.display = 'none';
+    verifyResetOtpBtn.style.display = 'none';
+  } catch (error) {
+    showAuthError('Error: ' + error.message);
+  }
+}
+
+async function handleResetPassword() {
+  const email = forgotEmail.value.trim();
+  const otp = resetOtpInput.value.trim();
+  const newPassword = newPasswordInput.value.trim();
+  const confirmPassword = confirmPasswordInput.value.trim();
+
+  if (!newPassword || !confirmPassword) {
+    showAuthError('Please enter both passwords');
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showAuthError('Passwords do not match');
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    showAuthError('Password must be at least 6 characters');
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp, newPassword })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      showAuthError(data.error || 'Password reset failed');
+      return;
+    }
+
+    showAuthError('');
+    showNotification('Password reset successfully! Please login');
+    resetForgotPasswordForm();
+    backToLogin();
+  } catch (error) {
+    showAuthError('Error: ' + error.message);
+  }
+}
+
+// MESSAGING FUNCTIONS
+async function loadAllUsers() {
+  try {
+    const response = await fetch('/api/users', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) return;
+
+    const users = await response.json();
+    displayAllUsers(users);
+  } catch (error) {
+    console.error('Error loading users:', error);
+  }
+}
+
+function displayAllUsers(users) {
+  allUsersList.innerHTML = '';
+  users.forEach(user => {
+    if (user.username !== currentUser.username) {
+      const userEl = document.createElement('div');
+      userEl.className = 'user-item';
+      userEl.style.cursor = 'pointer';
+      userEl.textContent = user.username;
+      userEl.addEventListener('click', () => selectUser(user._id, user.username));
+      allUsersList.appendChild(userEl);
+    }
+  });
+}
+
+async function selectUser(userId, username) {
+  selectedUserId = userId;
+  selectedUsername = username;
+  
+  noChatSelected.style.display = 'none';
+  chatWindow.style.display = 'flex';
+  chatWithName.textContent = username;
+  messagesList.innerHTML = '';
+  
+  await loadPrivateMessages(userId);
+}
+
+async function loadPrivateMessages(userId) {
+  try {
+    const response = await fetch(`/api/private-messages/${userId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) return;
+
+    const messages = await response.json();
+    messagesList.innerHTML = '';
+    messages.forEach(msg => displayPrivateMessage(msg));
+    scrollToBottom();
+  } catch (error) {
+    console.error('Error loading messages:', error);
+  }
+}
+
+function displayPrivateMessage(message) {
+  const messageEl = document.createElement('div');
+  const isOwn = message.sender.toString() === currentUser.id.toString();
+  messageEl.className = `message ${isOwn ? 'own' : 'other'}`;
+
+  if (message.fileUrl) {
+    const fileIcon = getFileIcon(message.fileType);
+    messageEl.innerHTML = `
+      <div class="file-message">
+        <div class="file-icon">${fileIcon}</div>
+        <div class="file-info">
+          <div class="file-name">${escapeHtml(message.fileName)}</div>
+          <a href="${message.fileUrl}" download class="file-download">Download</a>
+        </div>
+      </div>
+      <div class="message-meta">${formatTime(message.timestamp)}</div>
+    `;
+  } else {
+    messageEl.innerHTML = `
+      <div class="message-content">${escapeHtml(message.text)}</div>
+      <div class="message-meta">${formatTime(message.timestamp)}</div>
+    `;
+  }
+
+  messagesList.appendChild(messageEl);
+}
+
+async function sendMessage() {
+  if (!selectedUserId) {
+    showNotification('Please select a user first', 'error');
+    return;
+  }
+
   const text = messageInput.value.trim();
   if (!text) return;
 
-  socket.emit('message', { text });
-  messageInput.value = '';
-  socket.emit('typing', { isTyping: false });
-  clearTimeout(typingTimeout);
+  try {
+    const response = await fetch('/api/private-messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        receiverId: selectedUserId,
+        text: text
+      })
+    });
+
+    if (response.ok) {
+      messageInput.value = '';
+      const message = await response.json();
+      displayPrivateMessage(message);
+      scrollToBottom();
+    }
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
 }
 
-// FILE UPLOAD
 async function handleFileUpload(e) {
+  if (!selectedUserId) {
+    showNotification('Please select a user first', 'error');
+    return;
+  }
+
   const file = e.target.files[0];
   if (!file) return;
 
@@ -340,12 +587,7 @@ async function handleFileUpload(e) {
     xhr.addEventListener('load', () => {
       if (xhr.status === 200) {
         const data = JSON.parse(xhr.responseText);
-        socket.emit('message', {
-          text: '',
-          fileUrl: data.fileUrl,
-          fileName: data.fileName,
-          fileType: data.fileType
-        });
+        sendFileMessage(data.fileUrl, data.fileName, data.fileType);
         showNotification('File uploaded successfully');
       } else {
         showNotification('Upload failed', 'error');
@@ -370,133 +612,38 @@ async function handleFileUpload(e) {
   }
 }
 
-// TYPING INDICATOR
+async function sendFileMessage(fileUrl, fileName, fileType) {
+  try {
+    const response = await fetch('/api/private-messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        receiverId: selectedUserId,
+        text: '',
+        fileUrl,
+        fileName,
+        fileType
+      })
+    });
+
+    if (response.ok) {
+      const message = await response.json();
+      displayPrivateMessage(message);
+      scrollToBottom();
+    }
+  } catch (error) {
+    console.error('Error sending file:', error);
+  }
+}
+
 function handleTyping() {
-  socket.emit('typing', { isTyping: true });
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    socket.emit('typing', { isTyping: false });
-  }, 3000);
+  // Typing indicator for private messages (optional)
 }
 
-// SOCKET EVENTS
-socket.on('messageHistory', (messages) => {
-  messagesList.innerHTML = '';
-  messages.forEach(msg => displayMessage(msg));
-  scrollToBottom();
-});
-
-socket.on('message', (message) => {
-  displayMessage(message);
-  
-  if (message.userId !== currentUser?.id) {
-    showNotification(`${message.username}: ${message.text || '[File]'}`);
-  }
-  
-  scrollToBottom();
-});
-
-socket.on('userJoined', (data) => {
-  userCount.textContent = data.userCount;
-  updateUsersList(data.users);
-  displaySystemMessage(`${data.username} joined the chat`);
-  showNotification(`${data.username} joined`);
-  scrollToBottom();
-});
-
-socket.on('userLeft', (data) => {
-  userCount.textContent = data.userCount;
-  updateUsersList(data.users);
-  displaySystemMessage(`${data.username} left the chat`);
-  scrollToBottom();
-});
-
-socket.on('userTyping', (data) => {
-  if (data.isTyping) {
-    typingUsers.add(data.username);
-    showTypingIndicator();
-  } else {
-    typingUsers.delete(data.username);
-    if (typingUsers.size === 0) {
-      hideTypingIndicator();
-    }
-  }
-});
-
-// DISPLAY FUNCTIONS
-function displayMessage(message) {
-  const messageEl = document.createElement('div');
-  const isOwn = message.userId === currentUser?.id;
-  messageEl.className = `message ${isOwn ? 'own' : 'other'}`;
-
-  const username = message.senderUsername || message.username || 'Unknown';
-  const timestamp = formatTime(message.timestamp);
-
-  if (message.fileUrl) {
-    const fileIcon = getFileIcon(message.fileType);
-    messageEl.innerHTML = `
-      <div class="file-message">
-        <div class="file-icon">${fileIcon}</div>
-        <div class="file-info">
-          <div class="file-name">${escapeHtml(message.fileName)}</div>
-          <a href="${message.fileUrl}" download class="file-download">Download</a>
-        </div>
-      </div>
-      <div class="message-meta">${username} • ${timestamp}</div>
-    `;
-  } else {
-    messageEl.innerHTML = `
-      <div class="message-content">${escapeHtml(message.text)}</div>
-      <div class="message-meta">${username} • ${timestamp}</div>
-    `;
-  }
-
-  messagesList.appendChild(messageEl);
-}
-
-function displaySystemMessage(text) {
-  const messageEl = document.createElement('div');
-  messageEl.style.textAlign = 'center';
-  messageEl.style.color = 'var(--text-light)';
-  messageEl.style.fontSize = '12px';
-  messageEl.style.margin = '10px 0';
-  messageEl.textContent = text;
-  messagesList.appendChild(messageEl);
-}
-
-function updateUsersList(users) {
-  usersList.innerHTML = '';
-  users.forEach(user => {
-    const userEl = document.createElement('div');
-    userEl.className = 'user-item';
-    userEl.textContent = user.username;
-    if (user.userId === currentUser?.id) {
-      userEl.textContent += ' (You)';
-      userEl.style.fontWeight = 'bold';
-    }
-    usersList.appendChild(userEl);
-  });
-}
-
-function showTypingIndicator() {
-  if (typingIndicator.innerHTML === '') {
-    const names = Array.from(typingUsers).join(', ');
-    typingIndicator.innerHTML = `
-      <span style="font-size: 12px; color: var(--text-light);">${names} ${typingUsers.size === 1 ? 'is' : 'are'} typing</span>
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-    `;
-    typingIndicator.classList.add('active');
-  }
-}
-
-function hideTypingIndicator() {
-  typingIndicator.innerHTML = '';
-  typingIndicator.classList.remove('active');
-}
-
+// UTILITY FUNCTIONS
 function scrollToBottom() {
   messagesList.scrollTop = messagesList.scrollHeight;
 }
