@@ -17,7 +17,10 @@
         <div id="loginForm" class="auth-form active">
           <h2>Login</h2>
           <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
-          <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+          <div class="password-wrapper">
+            <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+            <button type="button" id="togglePassword" class="toggle-password-btn">👁️</button>
+          </div>
           <button id="loginBtn">Login</button>
           <p>Don't have an account? <a href="#" onclick="toggleAuthForm()">Sign up</a></p>
           <p style="text-align: center; margin-top: 10px;"><a href="#" onclick="showForgotPassword()" style="font-size: 12px; color: #667eea;">Forgot Password?</a></p>

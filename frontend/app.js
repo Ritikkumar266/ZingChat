@@ -9,6 +9,7 @@ let sendOtpBtn, verifyOtpBtn, otpInput;
 let forgotPasswordForm, forgotEmail, sendResetBtn, resetOtpInput, verifyResetOtpBtn;
 let newPasswordInput, confirmPasswordInput, resetPasswordBtn;
 let allUsersList, conversationsList, noChatSelected, chatWindow, chatWithName;
+let togglePassword;
 
 // STATE
 let currentUser = null;
@@ -29,6 +30,7 @@ function initDOM() {
   loginEmail = document.getElementById('loginEmail');
   loginPassword = document.getElementById('loginPassword');
   loginBtn = document.getElementById('loginBtn');
+  togglePassword = document.getElementById('togglePassword');
   registerUsername = document.getElementById('registerUsername');
   registerEmail = document.getElementById('registerEmail');
   registerPassword = document.getElementById('registerPassword');
@@ -74,6 +76,11 @@ function attachEventListeners() {
   resetPasswordBtn.addEventListener('click', handleResetPassword);
   themeToggle.addEventListener('click', toggleTheme);
   logoutBtn.addEventListener('click', handleLogout);
+  togglePassword.addEventListener('click', () => {
+    const type = loginPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+    loginPassword.setAttribute('type', type);
+    togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+  });
 
   sendBtn.addEventListener('click', sendMessage);
   messageInput.addEventListener('keypress', (e) => {
@@ -665,7 +672,23 @@ function escapeHtml(text) {
 
 function formatTime(timestamp) {
   const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const isToday = date.toDateString() === today.toDateString();
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+  
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  
+  if (isToday) {
+    return `Today ${time}`;
+  } else if (isYesterday) {
+    return `Yesterday ${time}`;
+  } else {
+    const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return `${dateStr} ${time}`;
+  }
 }
 
 function getFileIcon(fileType) {
