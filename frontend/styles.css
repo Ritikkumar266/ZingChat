@@ -123,41 +123,6 @@ body.dark-mode #authScreen {
   border-color: var(--primary);
 }
 
-.password-wrapper {
-  position: relative;
-  margin-bottom: 15px;
-}
-
-.password-wrapper input {
-  width: 100%;
-  padding: 12px 40px 12px 12px;
-  border: 2px solid var(--border);
-  border-radius: 6px;
-  font-size: 14px;
-  background: var(--bg);
-  color: var(--text);
-  transition: border-color 0.3s;
-  margin-bottom: 0;
-}
-
-.password-wrapper input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.toggle-password-btn {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 0;
-  color: var(--text-light);
-}
-
 .auth-form button {
   width: 100%;
   padding: 12px;
