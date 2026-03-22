@@ -11,7 +11,11 @@
     <!-- Auth Screen -->
     <div id="authScreen" class="screen active">
       <div class="auth-box">
-        <h1>ZingChat</h1>
+        <div class="logo-container">
+          <div class="logo">💬</div>
+          <h1>ZingChat</h1>
+          <p class="tagline">Connect Instantly</p>
+        </div>
         
         <!-- Login Form -->
         <div id="loginForm" class="auth-form active">
@@ -61,9 +65,11 @@
     <div id="chatScreen" class="screen">
       <div class="chat-header">
         <div class="header-left">
-          <h2>Chat Room</h2>
+          <div class="logo-small">💬</div>
+          <h2>ZingChat</h2>
         </div>
         <div class="header-right">
+          <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search users...">
           <button id="themeToggle" class="theme-btn" title="Toggle dark mode">🌙</button>
           <button id="logoutBtn" class="logout-btn">Logout</button>
         </div>
@@ -73,25 +79,40 @@
         <!-- Sidebar -->
         <div class="sidebar">
           <div class="sidebar-header">
-            <h3>Conversations</h3>
+            <h3>💬 Conversations</h3>
           </div>
           <div id="conversationsList" class="users-list"></div>
           
           <div class="sidebar-header" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 10px;">
-            <h3>All Users</h3>
+            <h3>👥 All Users</h3>
           </div>
           <div id="allUsersList" class="users-list"></div>
         </div>
 
         <!-- Chat Area -->
         <div class="chat-area">
-          <div id="noChatSelected" style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light);">
+          <div id="noChatSelected" style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light); flex-direction: column;">
+            <div style="font-size: 64px; margin-bottom: 20px;">💬</div>
             <p>Select a user to start chatting</p>
+            <p style="font-size: 12px; margin-top: 10px; opacity: 0.7;">Your messages are encrypted and private</p>
           </div>
           
           <div id="chatWindow" style="display: none; flex-direction: column; height: 100%;">
             <div class="chat-header" style="background: var(--bg-secondary); color: var(--text); border-bottom: 1px solid var(--border);">
-              <h3 id="chatWithName" style="margin: 0;"></h3>
+              <div style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1;" id="chatHeaderInfo">
+                <div class="user-avatar" id="chatUserAvatar"></div>
+                <div>
+                  <h3 id="chatWithName" style="margin: 0;"></h3>
+                  <span id="userStatus" class="user-status"></span>
+                </div>
+              </div>
+              <input type="text" id="messageSearchInput" placeholder="🔍 Search messages..." class="message-search-input" style="display: none;">
+              <div class="chat-header-actions">
+                <button class="header-action-btn" id="searchMessagesBtn" title="Search messages">�</button>
+                <button class="header-action-btn" id="callBtn" title="Voice call">�</button>
+                <button class="header-action-btn" id="videoBtn" title="Video call">📹</button>
+                <button class="header-action-btn" id="infoBtn" title="User info">ℹ️</button>
+              </div>
             </div>
             
             <div class="chat-content">
@@ -109,7 +130,9 @@
                 >
                 <label for="fileInput" class="file-btn" title="Share file">📎</label>
                 <input type="file" id="fileInput" style="display: none;">
-                <button id="sendBtn">Send</button>
+                <div class="emoji-picker-btn" id="emojiBtn" title="Add emoji">😊</div>
+                <div class="reaction-btn" id="reactionBtn" title="Add reaction">👍</div>
+                <button id="sendBtn" class="send-btn-enhanced">Send</button>
               </div>
               <div id="uploadProgress" class="upload-progress" style="display: none;">
                 <div class="progress-bar"></div>
@@ -118,6 +141,66 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Emoji Picker Modal -->
+  <div id="emojiModal" class="emoji-modal" style="display: none;">
+    <div class="emoji-grid">
+      <span class="emoji-item" data-emoji="😀">😀</span>
+      <span class="emoji-item" data-emoji="😂">😂</span>
+      <span class="emoji-item" data-emoji="❤️">❤️</span>
+      <span class="emoji-item" data-emoji="👍">👍</span>
+      <span class="emoji-item" data-emoji="🔥">🔥</span>
+      <span class="emoji-item" data-emoji="😍">😍</span>
+      <span class="emoji-item" data-emoji="🎉">🎉</span>
+      <span class="emoji-item" data-emoji="😎">😎</span>
+      <span class="emoji-item" data-emoji="🚀">🚀</span>
+      <span class="emoji-item" data-emoji="💯">💯</span>
+      <span class="emoji-item" data-emoji="😢">😢</span>
+      <span class="emoji-item" data-emoji="😡">😡</span>
+    </div>
+  </div>
+
+  <!-- User Info Modal -->
+  <div id="userInfoModal" class="user-info-modal" style="display: none;">
+    <div class="user-info-content">
+      <button class="modal-close" onclick="document.getElementById('userInfoModal').style.display='none'">✕</button>
+      <div class="user-info-header">
+        <div class="user-info-avatar" id="userInfoAvatar"></div>
+        <h2 id="userInfoName"></h2>
+        <span id="userInfoStatusBig" class="user-info-status"></span>
+      </div>
+      <div class="user-info-details">
+        <div class="info-item">
+          <span class="info-label">Email:</span>
+          <span id="userInfoEmail" class="info-value"></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Status:</span>
+          <span id="userInfoStatusText" class="info-value"></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Member Since:</span>
+          <span id="userInfoJoined" class="info-value"></span>
+        </div>
+      </div>
+      <div class="user-info-actions">
+        <button class="action-btn" id="blockUserBtn">🚫 Block User</button>
+        <button class="action-btn" id="muteUserBtn">🔇 Mute Notifications</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reaction Picker Modal -->
+  <div id="reactionModal" class="reaction-modal" style="display: none;">
+    <div class="reaction-grid">
+      <span class="reaction-item" data-reaction="👍">👍</span>
+      <span class="reaction-item" data-reaction="❤️">❤️</span>
+      <span class="reaction-item" data-reaction="😂">😂</span>
+      <span class="reaction-item" data-reaction="😮">😮</span>
+      <span class="reaction-item" data-reaction="😢">😢</span>
+      <span class="reaction-item" data-reaction="🔥">🔥</span>
     </div>
   </div>
 

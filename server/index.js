@@ -378,6 +378,9 @@ io.on('connection', (socket) => {
       const { username, userId } = data;
       users.set(socket.id, { username, userId, socketId: socket.id });
 
+      // Notify all users that this user is online
+      io.emit('userOnline', { userId, username });
+
       // Load message history
       const messages = await Message.find()
         .sort({ timestamp: 1 })
@@ -450,6 +453,10 @@ io.on('connection', (socket) => {
     const user = users.get(socket.id);
     if (user) {
       users.delete(socket.id);
+      
+      // Notify all users that this user is offline
+      io.emit('userOffline', { userId: user.userId, username: user.username });
+      
       io.emit('userLeft', {
         username: user.username,
         userCount: users.size,
