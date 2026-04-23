@@ -925,6 +925,14 @@ socket.on('privateMessage', (message) => {
   }
 });
 
+// Listen for private messages via Socket.io
+socket.on('privateMessageReceived', (message) => {
+  if (message.sender.toString() === selectedUserId || message.receiver.toString() === selectedUserId) {
+    displayPrivateMessage(message);
+    scrollToBottom();
+  }
+});
+
 // Listen for typing indicator
 socket.on('userTyping', (data) => {
   if (data.userId === selectedUserId && data.isTyping) {
@@ -1350,6 +1358,12 @@ async function sendMessage() {
         const message = await response.json();
         displayPrivateMessage(message);
         scrollToBottom();
+        
+        // Emit via Socket.io for real-time delivery
+        socket.emit('privateMessage', {
+          receiverId: selectedUserId,
+          text: text
+        });
       } else {
         showNotification('Failed to send message', 'error');
       }

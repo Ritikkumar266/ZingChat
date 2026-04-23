@@ -750,6 +750,46 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle private messages via Socket.io
+  socket.on('privateMessage', async (data) => {
+    try {
+      const user = users.get(socket.id);
+      if (!user) return;
+
+      const { receiverId, text, fileUrl, fileName, fileType } = data;
+
+      const message = new PrivateMessage({
+        sender: user.userId,
+        receiver: receiverId,
+        senderUsername: user.username,
+        text: text || '',
+        fileUrl: fileUrl || null,
+        fileName: fileName || null,
+        fileType: fileType || null
+      });
+
+      await message.save();
+
+      const messageData = {
+        _id: message._id,
+        sender: user.userId,
+        receiver: receiverId,
+        senderUsername: user.username,
+        text: text || '',
+        fileUrl: fileUrl || null,
+        fileName: fileName || null,
+        fileType: fileType || null,
+        timestamp: message.timestamp
+      };
+
+      // Emit to both sender and receiver
+      io.emit('privateMessageReceived', messageData);
+      console.log(`Private message from ${user.username} to ${receiverId}`);
+    } catch (error) {
+      console.error('Private message error:', error);
+    }
+  });
+
   // Typing indicator
   socket.on('typing', (data) => {
     const user = users.get(socket.id);
