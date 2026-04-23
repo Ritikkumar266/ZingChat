@@ -1,37 +1,7 @@
-# Environment variables
+node_modules/
 .env
 .env.local
-.env.*.local
-
-# Dependencies
-node_modules/
-package-lock.json
-yarn.lock
-
-# Uploads
+.DS_Store
+*.log
 server/uploads/*
 !server/uploads/.gitkeep
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Build
-dist/
-build/
-.next/
-
-# OS
-Thumbs.db
-.DS_Store

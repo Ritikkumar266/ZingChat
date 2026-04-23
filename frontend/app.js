@@ -1,4 +1,14 @@
-const socket = io();
+const socket = io(window.location.origin);
+
+// For production, use the Render backend URL
+const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000' 
+  : 'https://zingchat-server.onrender.com'; // Update this with your Render backend URL
+
+// Helper function to get full API URL
+function getApiUrl(endpoint) {
+  return `${API_BASE_URL}${endpoint}`;
+}
 
 // DOM ELEMENTS
 let authScreen, chatScreen, loginForm, registerForm, loginEmail, loginPassword, loginBtn;
@@ -248,7 +258,7 @@ async function handleSendOTP() {
   }
 
   try {
-    const response = await fetch('/api/auth/send-otp', {
+    const response = await fetch(getApiUrl('/api/auth/send-otp'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -281,7 +291,7 @@ async function handleVerifyOTP() {
   }
 
   try {
-    const response = await fetch('/api/auth/verify-otp', {
+    const response = await fetch(getApiUrl('/api/auth/verify-otp'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp })
@@ -317,7 +327,7 @@ async function handleLogin() {
   }
 
   try {
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch(getApiUrl('/api/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -366,7 +376,7 @@ async function handleRegister() {
   }
 
   try {
-    const response = await fetch('/api/auth/register', {
+    const response = await fetch(getApiUrl('/api/auth/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password })
@@ -567,7 +577,7 @@ async function handleResetPassword() {
 // MESSAGING FUNCTIONS
 async function loadAllUsers() {
   try {
-    const response = await fetch('/api/users', {
+    const response = await fetch(getApiUrl('/api/users'), {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -643,7 +653,7 @@ async function selectUser(userId, username) {
 
 async function loadPrivateMessages(userId) {
   try {
-    const response = await fetch(`/api/private-messages/${userId}`, {
+    const response = await fetch(getApiUrl(`/api/private-messages/${userId}`), {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -712,7 +722,7 @@ async function sendMessage() {
   if (!text) return;
 
   try {
-    const response = await fetch('/api/private-messages', {
+    const response = await fetch(getApiUrl('/api/private-messages'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -783,7 +793,7 @@ async function handleFileUpload(e) {
       fileInput.value = '';
     });
 
-    xhr.open('POST', '/api/upload');
+    xhr.open('POST', getApiUrl('/api/upload'));
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.send(formData);
   } catch (error) {
@@ -795,7 +805,7 @@ async function handleFileUpload(e) {
 
 async function sendFileMessage(fileUrl, fileName, fileType) {
   try {
-    const response = await fetch('/api/private-messages', {
+    const response = await fetch(getApiUrl('/api/private-messages'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1035,7 +1045,7 @@ function initGroupChat() {
 
 async function loadUsersForGroupCreation() {
   try {
-    const response = await fetch('/api/users', {
+    const response = await fetch(getApiUrl('/api/users'), {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -1086,7 +1096,7 @@ async function handleCreateGroup() {
   const memberIds = Array.from(memberCheckboxes).map(cb => cb.value);
   
   try {
-    const response = await fetch('/api/groups', {
+    const response = await fetch(getApiUrl('/api/groups'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1121,7 +1131,7 @@ async function handleCreateGroup() {
 
 async function loadGroups() {
   try {
-    const response = await fetch('/api/groups', {
+    const response = await fetch(getApiUrl('/api/groups'), {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -1206,7 +1216,7 @@ async function selectGroup(groupId, groupName) {
 
 async function loadGroupMessages(groupId) {
   try {
-    const response = await fetch(`/api/groups/${groupId}/messages`, {
+    const response = await fetch(getApiUrl(`/api/groups/${groupId}/messages`), {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
@@ -1277,7 +1287,7 @@ async function sendMessage() {
     if (!text) return;
 
     try {
-      const response = await fetch(`/api/groups/${selectedGroupId}/messages`, {
+      const response = await fetch(getApiUrl(`/api/groups/${selectedGroupId}/messages`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

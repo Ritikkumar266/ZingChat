@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: zingchat-server
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: MONGODB_URI
+        scope: build
+      - key: JWT_SECRET
+        scope: build
+      - key: EMAIL_USER
+        scope: build
+      - key: EMAIL_PASSWORD
+        scope: build
+      - key: GOOGLE_CLIENT_ID
+        scope: build
+      - key: GOOGLE_CLIENT_SECRET
+        scope: build
+      - key: GITHUB_CLIENT_ID
+        scope: build
+      - key: GITHUB_CLIENT_SECRET
+        scope: build
+      - key: FRONTEND_URL
+        scope: build
