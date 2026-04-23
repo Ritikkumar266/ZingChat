@@ -3,7 +3,7 @@ const socket = io(window.location.origin);
 // For production, use the Render backend URL
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:5000' 
-  : 'https://zingchat-server.onrender.com'; // Your actual Render backend URL
+  : 'https://zingchat-backend.onrender.com';
 
 // Helper function to get full API URL
 function getApiUrl(endpoint) {
