@@ -1,5 +1,3 @@
-const socket = io(window.location.origin);
-
 // For production, use the Render backend URL
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:5000' 
@@ -9,6 +7,9 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 function getApiUrl(endpoint) {
   return `${API_BASE_URL}${endpoint}`;
 }
+
+// Initialize Socket.io with correct backend URL
+const socket = io(API_BASE_URL);
 
 // DOM ELEMENTS
 let authScreen, chatScreen, loginForm, registerForm, loginEmail, loginPassword, loginBtn;
