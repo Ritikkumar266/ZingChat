@@ -14,6 +14,8 @@ const Message = require('./models/Message');
 const OTP = require('./models/OTP');
 const PasswordReset = require('./models/PasswordReset');
 const PrivateMessage = require('./models/PrivateMessage');
+const UserStatus = require('./models/UserStatus');
+const Conversation = require('./models/Conversation');
 const authMiddleware = require('./middleware/auth');
 const { sendOTP, generateOTP } = require('./services/emailService');
 
@@ -275,7 +277,39 @@ app.post('/api/auth/reset-password', async (req, res) => {
 app.get('/api/users', authMiddleware, async (req, res) => {
   try {
     const users = await User.find({}, 'username email createdAt').lean();
-    res.json(users);
+    
+    // Get status for each user
+    const usersWithStatus = await Promise.all(
+      users.map(async (user) => {
+        const status = await UserStatus.findOne({ userId: user._id }).lean();
+        return {
+          ...user,
+          status: status?.status || 'offline',
+          lastSeen: status?.lastSeen
+        };
+      })
+    );
+    
+    res.json(usersWithStatus);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all conversations for current user
+app.get('/api/conversations', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const conversations = await Conversation.find({
+      participants: userId
+    })
+      .populate('participants', 'username email')
+      .populate('lastMessage')
+      .sort({ lastMessageTime: -1 })
+      .lean();
+
+    res.json(conversations);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -325,6 +359,18 @@ app.get('/api/private-messages/:userId', authMiddleware, async (req, res) => {
       ]
     }).sort({ timestamp: 1 }).lean();
 
+    // Update conversation unread count
+    await Conversation.findOneAndUpdate(
+      { participants: { $all: [currentUserId, userId] } },
+      { 
+        $set: { 
+          [`unreadCount.${currentUserId}`]: 0,
+          lastMessageTime: new Date()
+        }
+      },
+      { upsert: true }
+    );
+
     res.json(messages);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -361,6 +407,20 @@ app.post('/api/private-messages', authMiddleware, async (req, res) => {
 
     await message.save();
 
+    // Create or update conversation
+    await Conversation.findOneAndUpdate(
+      { participants: { $all: [senderId, receiverId] } },
+      {
+        $set: {
+          participants: [senderId, receiverId],
+          lastMessage: message._id,
+          lastMessageTime: new Date()
+        },
+        $inc: { [`unreadCount.${receiverId}`]: 1 }
+      },
+      { upsert: true, new: true }
+    );
+
     res.json(message);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -377,6 +437,13 @@ io.on('connection', (socket) => {
     try {
       const { username, userId } = data;
       users.set(socket.id, { username, userId, socketId: socket.id });
+
+      // Update UserStatus to online
+      await UserStatus.findOneAndUpdate(
+        { userId },
+        { status: 'online', lastSeen: new Date(), socketId: socket.id },
+        { upsert: true, new: true }
+      );
 
       // Notify all users that this user is online
       io.emit('userOnline', { userId, username });
@@ -453,6 +520,13 @@ io.on('connection', (socket) => {
     const user = users.get(socket.id);
     if (user) {
       users.delete(socket.id);
+      
+      // Update UserStatus to offline
+      UserStatus.findOneAndUpdate(
+        { userId: user.userId },
+        { status: 'offline', lastSeen: new Date() },
+        { upsert: true }
+      ).catch(err => console.error('UserStatus update error:', err));
       
       // Notify all users that this user is offline
       io.emit('userOffline', { userId: user.userId, username: user.username });
