@@ -471,22 +471,36 @@ app.post('/api/private-messages', authMiddleware, async (req, res) => {
 
     await message.save();
 
-    // Create or update conversation
-    await Conversation.findOneAndUpdate(
-      { participants: { $all: [senderId, receiverId] } },
-      {
-        $set: {
+    // Create or update conversation (simplified)
+    try {
+      const conversation = await Conversation.findOne({
+        participants: { $all: [senderId, receiverId] }
+      });
+
+      if (conversation) {
+        conversation.lastMessage = message._id;
+        conversation.lastMessageTime = new Date();
+        if (!conversation.unreadCount) {
+          conversation.unreadCount = new Map();
+        }
+        conversation.unreadCount.set(receiverId.toString(), (conversation.unreadCount.get(receiverId.toString()) || 0) + 1);
+        await conversation.save();
+      } else {
+        await Conversation.create({
           participants: [senderId, receiverId],
           lastMessage: message._id,
-          lastMessageTime: new Date()
-        },
-        $inc: { [`unreadCount.${receiverId}`]: 1 }
-      },
-      { upsert: true, new: true }
-    );
+          lastMessageTime: new Date(),
+          unreadCount: new Map([[receiverId.toString(), 1]])
+        });
+      }
+    } catch (convError) {
+      console.error('Conversation update error:', convError);
+      // Don't fail the message send if conversation update fails
+    }
 
     res.json(message);
   } catch (error) {
+    console.error('Send message error:', error);
     res.status(500).json({ error: error.message });
   }
 });
