@@ -204,6 +204,21 @@ window.addEventListener('load', () => {
     themeToggle.textContent = '☀️';
   }
 
+  // Check for OAuth redirect
+  const urlParams = new URLSearchParams(window.location.search);
+  const oauthToken = urlParams.get('token');
+  const oauthUser = urlParams.get('user');
+  
+  if (oauthToken && oauthUser) {
+    token = oauthToken;
+    currentUser = JSON.parse(oauthUser);
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    window.history.replaceState({}, document.title, window.location.pathname);
+    enterChat();
+    return;
+  }
+
   const savedToken = localStorage.getItem('token');
   if (savedToken) {
     token = savedToken;
@@ -377,6 +392,7 @@ function enterChat() {
   authScreen.classList.remove('active');
   chatScreen.classList.add('active');
   loadAllUsers();
+  loadGroups();
   messageInput.focus();
   
   // Emit join event with userId
@@ -982,3 +998,347 @@ function isUserBlocked(userId) {
 function isUserMuted(userId) {
   return mutedUsers.has(userId);
 }
+
+
+// ============ GROUP CHAT FUNCTIONS ============
+
+let selectedGroupId = null;
+let groups = [];
+
+// Initialize group chat
+function initGroupChat() {
+  const createGroupBtn = document.getElementById('createGroupBtn');
+  if (!createGroupBtn) {
+    console.error('createGroupBtn not found');
+    return;
+  }
+  
+  const createGroupModal = document.getElementById('createGroupModal');
+  const createGroupSubmitBtn = document.getElementById('createGroupSubmitBtn');
+  
+  createGroupBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    console.log('Create group button clicked');
+    createGroupModal.style.display = 'flex';
+    loadUsersForGroupCreation();
+  });
+  
+  createGroupSubmitBtn.addEventListener('click', handleCreateGroup);
+  
+  // Close modal when clicking outside
+  createGroupModal.addEventListener('click', (e) => {
+    if (e.target === createGroupModal) {
+      createGroupModal.style.display = 'none';
+    }
+  });
+}
+
+async function loadUsersForGroupCreation() {
+  try {
+    const response = await fetch('/api/users', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) return;
+
+    const users = await response.json();
+    const groupMembersList = document.getElementById('groupMembersList');
+    groupMembersList.innerHTML = '';
+    
+    users.forEach(user => {
+      if (user.username !== currentUser.username) {
+        const label = document.createElement('label');
+        label.style.display = 'flex';
+        label.style.alignItems = 'center';
+        label.style.padding = '8px';
+        label.style.cursor = 'pointer';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = user._id;
+        checkbox.style.marginRight = '10px';
+        
+        const span = document.createElement('span');
+        span.textContent = user.username;
+        
+        label.appendChild(checkbox);
+        label.appendChild(span);
+        groupMembersList.appendChild(label);
+      }
+    });
+  } catch (error) {
+    console.error('Error loading users:', error);
+  }
+}
+
+async function handleCreateGroup() {
+  const groupName = document.getElementById('groupName').value.trim();
+  const groupDescription = document.getElementById('groupDescription').value.trim();
+  const groupError = document.getElementById('groupError');
+  
+  if (!groupName) {
+    groupError.textContent = 'Group name is required';
+    groupError.style.display = 'block';
+    return;
+  }
+  
+  const memberCheckboxes = document.querySelectorAll('#groupMembersList input[type="checkbox"]:checked');
+  const memberIds = Array.from(memberCheckboxes).map(cb => cb.value);
+  
+  try {
+    const response = await fetch('/api/groups', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        name: groupName,
+        description: groupDescription,
+        memberIds
+      })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      groupError.textContent = data.error || 'Failed to create group';
+      groupError.style.display = 'block';
+      return;
+    }
+
+    showNotification('Group created successfully!', 'success');
+    document.getElementById('createGroupModal').style.display = 'none';
+    document.getElementById('groupName').value = '';
+    document.getElementById('groupDescription').value = '';
+    groupError.style.display = 'none';
+    
+    loadGroups();
+  } catch (error) {
+    groupError.textContent = 'Error: ' + error.message;
+    groupError.style.display = 'block';
+  }
+}
+
+async function loadGroups() {
+  try {
+    const response = await fetch('/api/groups', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) return;
+
+    groups = await response.json();
+    displayGroups();
+  } catch (error) {
+    console.error('Error loading groups:', error);
+  }
+}
+
+function displayGroups() {
+  const conversationsList = document.getElementById('conversationsList');
+  conversationsList.innerHTML = '';
+  
+  groups.forEach(group => {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'user-item';
+    if (selectedGroupId === group._id) {
+      groupEl.classList.add('active');
+    }
+    
+    const avatar = document.createElement('div');
+    avatar.className = 'user-avatar';
+    avatar.textContent = group.name.charAt(0).toUpperCase();
+    avatar.style.background = '#667eea';
+    
+    const info = document.createElement('div');
+    info.className = 'user-info';
+    
+    const name = document.createElement('div');
+    name.className = 'user-name';
+    name.textContent = group.name;
+    
+    const memberCount = document.createElement('div');
+    memberCount.className = 'user-status';
+    memberCount.textContent = `👥 ${group.members.length} members`;
+    
+    info.appendChild(name);
+    info.appendChild(memberCount);
+    
+    groupEl.appendChild(avatar);
+    groupEl.appendChild(info);
+    groupEl.addEventListener('click', () => selectGroup(group._id, group.name));
+    
+    conversationsList.appendChild(groupEl);
+  });
+}
+
+async function selectGroup(groupId, groupName) {
+  selectedGroupId = groupId;
+  selectedUserId = null;
+  
+  document.querySelectorAll('.user-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  event.currentTarget.classList.add('active');
+  
+  const noChatSelected = document.getElementById('noChatSelected');
+  const chatWindow = document.getElementById('chatWindow');
+  const chatWithName = document.getElementById('chatWithName');
+  const chatUserAvatar = document.getElementById('chatUserAvatar');
+  const userStatus = document.getElementById('userStatus');
+  
+  noChatSelected.style.display = 'none';
+  chatWindow.style.display = 'flex';
+  
+  chatWithName.textContent = groupName;
+  chatUserAvatar.textContent = groupName.charAt(0).toUpperCase();
+  chatUserAvatar.style.background = '#667eea';
+  userStatus.textContent = '👥 Group Chat';
+  
+  const messagesList = document.getElementById('messagesList');
+  messagesList.innerHTML = '';
+  
+  // Join group socket room
+  socket.emit('joinGroup', { groupId });
+  
+  await loadGroupMessages(groupId);
+}
+
+async function loadGroupMessages(groupId) {
+  try {
+    const response = await fetch(`/api/groups/${groupId}/messages`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) return;
+
+    const messages = await response.json();
+    const messagesList = document.getElementById('messagesList');
+    messagesList.innerHTML = '';
+    messages.forEach(msg => displayGroupMessage(msg));
+    scrollToBottom();
+  } catch (error) {
+    console.error('Error loading group messages:', error);
+  }
+}
+
+function displayGroupMessage(message) {
+  const messageEl = document.createElement('div');
+  const isOwn = message.sender.toString() === currentUser.id.toString();
+  messageEl.className = `message ${isOwn ? 'sent' : 'received'}`;
+
+  const senderName = document.createElement('div');
+  senderName.className = 'message-sender';
+  senderName.textContent = message.senderUsername;
+  senderName.style.fontSize = '12px';
+  senderName.style.opacity = '0.7';
+  senderName.style.marginBottom = '4px';
+  
+  if (!isOwn) {
+    messageEl.appendChild(senderName);
+  }
+
+  if (message.fileUrl) {
+    const fileIcon = getFileIcon(message.fileType);
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.innerHTML = `
+      <div class="file-message">
+        <div class="file-icon">${fileIcon}</div>
+        <div class="file-info">
+          <div class="file-name">${escapeHtml(message.fileName)}</div>
+          <a href="${message.fileUrl}" download style="color: inherit; text-decoration: underline; font-size: 12px;">Download</a>
+        </div>
+      </div>
+    `;
+    messageEl.appendChild(bubble);
+  } else {
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.textContent = message.text;
+    messageEl.appendChild(bubble);
+  }
+
+  const time = document.createElement('div');
+  time.className = 'message-time';
+  time.textContent = formatTime(message.timestamp);
+  messageEl.appendChild(time);
+
+  const messagesList = document.getElementById('messagesList');
+  messagesList.appendChild(messageEl);
+}
+
+// Override sendMessage to handle group messages
+const originalSendMessage = sendMessage;
+async function sendMessage() {
+  if (selectedGroupId) {
+    // Send group message
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    try {
+      const response = await fetch(`/api/groups/${selectedGroupId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ text })
+      });
+
+      if (response.ok) {
+        messageInput.value = '';
+        const message = await response.json();
+        displayGroupMessage(message);
+        scrollToBottom();
+        
+        // Emit via socket
+        socket.emit('groupMessage', {
+          groupId: selectedGroupId,
+          text: message.text,
+          fileUrl: message.fileUrl,
+          fileName: message.fileName,
+          fileType: message.fileType
+        });
+      }
+    } catch (error) {
+      console.error('Error sending group message:', error);
+    }
+  } else if (selectedUserId) {
+    // Send private message
+    await originalSendMessage();
+  } else {
+    showNotification('Please select a user or group first', 'error');
+  }
+}
+
+// Socket.io listeners for group chat
+socket.on('groupMessage', (message) => {
+  if (message.groupId === selectedGroupId) {
+    displayGroupMessage(message);
+    scrollToBottom();
+  }
+});
+
+socket.on('groupUserTyping', (data) => {
+  if (selectedGroupId) {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (data.isTyping) {
+      typingIndicator.innerHTML = `
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      `;
+      typingIndicator.style.display = 'flex';
+      scrollToBottom();
+    } else {
+      typingIndicator.style.display = 'none';
+    }
+  }
+});
+
+// Initialize group chat when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM loaded, initializing group chat');
+  initGroupChat();
+});

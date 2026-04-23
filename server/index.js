@@ -8,6 +8,10 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const fs = require('fs');
+const passport = require('passport');
+const session = require('express-session');
+
+require('./config/passport');
 
 const User = require('./models/User');
 const Message = require('./models/Message');
@@ -16,6 +20,8 @@ const PasswordReset = require('./models/PasswordReset');
 const PrivateMessage = require('./models/PrivateMessage');
 const UserStatus = require('./models/UserStatus');
 const Conversation = require('./models/Conversation');
+const Group = require('./models/Group');
+const GroupMessage = require('./models/GroupMessage');
 const authMiddleware = require('./middleware/auth');
 const { sendOTP, generateOTP } = require('./services/emailService');
 
@@ -33,6 +39,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Session middleware for OAuth
+app.use(session({
+  secret: process.env.JWT_SECRET || 'secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Create uploads directory if it doesn't exist
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) {
@@ -69,6 +87,52 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/chat-app'
 
 // Store active users
 const users = new Map();
+
+// ============ OAUTH ROUTES ============
+
+// Google OAuth
+app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+app.get('/api/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => {
+  const token = jwt.sign(
+    { userId: req.user._id, username: req.user.username },
+    process.env.JWT_SECRET || 'secret',
+    { expiresIn: '7d' }
+  );
+  
+  res.redirect(`${process.env.FRONTEND_URL}?token=${token}&user=${JSON.stringify({
+    id: req.user._id,
+    username: req.user.username,
+    email: req.user.email,
+    avatar: req.user.avatar
+  })}`);
+});
+
+// GitHub OAuth
+app.get('/api/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
+
+app.get('/api/auth/github/callback', passport.authenticate('github', { failureRedirect: '/' }), (req, res) => {
+  const token = jwt.sign(
+    { userId: req.user._id, username: req.user.username },
+    process.env.JWT_SECRET || 'secret',
+    { expiresIn: '7d' }
+  );
+  
+  res.redirect(`${process.env.FRONTEND_URL}?token=${token}&user=${JSON.stringify({
+    id: req.user._id,
+    username: req.user.username,
+    email: req.user.email,
+    avatar: req.user.avatar
+  })}`);
+});
+
+// Logout
+app.get('/api/auth/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Logged out successfully' });
+  });
+});
 
 // ============ AUTH ROUTES ============
 
@@ -427,6 +491,174 @@ app.post('/api/private-messages', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ GROUP ROUTES ============
+
+// Create a new group
+app.post('/api/groups', authMiddleware, async (req, res) => {
+  try {
+    const { name, description, memberIds } = req.body;
+    const adminId = req.userId;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Group name required' });
+    }
+
+    const members = [adminId, ...(memberIds || [])];
+    const group = new Group({
+      name,
+      description: description || '',
+      members,
+      admin: adminId
+    });
+
+    await group.save();
+    await group.populate('members', 'username email');
+
+    res.status(201).json(group);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all groups for current user
+app.get('/api/groups', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const groups = await Group.find({ members: userId })
+      .populate('members', 'username email')
+      .populate('admin', 'username')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(groups);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get group details
+app.get('/api/groups/:groupId', authMiddleware, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    const group = await Group.findById(groupId)
+      .populate('members', 'username email')
+      .populate('admin', 'username');
+
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    res.json(group);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add member to group
+app.post('/api/groups/:groupId/members', authMiddleware, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { userId } = req.body;
+    const currentUserId = req.userId;
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    if (group.admin.toString() !== currentUserId) {
+      return res.status(403).json({ error: 'Only admin can add members' });
+    }
+
+    if (!group.members.includes(userId)) {
+      group.members.push(userId);
+      await group.save();
+    }
+
+    await group.populate('members', 'username email');
+    res.json(group);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Remove member from group
+app.delete('/api/groups/:groupId/members/:userId', authMiddleware, async (req, res) => {
+  try {
+    const { groupId, userId } = req.params;
+    const currentUserId = req.userId;
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    if (group.admin.toString() !== currentUserId && userId !== currentUserId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    group.members = group.members.filter(m => m.toString() !== userId);
+    await group.save();
+
+    await group.populate('members', 'username email');
+    res.json(group);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get group messages
+app.get('/api/groups/:groupId/messages', authMiddleware, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    const messages = await GroupMessage.find({ groupId })
+      .sort({ timestamp: 1 })
+      .limit(100)
+      .lean();
+
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Send message to group
+app.post('/api/groups/:groupId/messages', authMiddleware, async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { text, fileUrl, fileName, fileType } = req.body;
+    const senderId = req.userId;
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    if (!group.members.includes(senderId)) {
+      return res.status(403).json({ error: 'Not a member of this group' });
+    }
+
+    const sender = await User.findById(senderId);
+    const message = new GroupMessage({
+      groupId,
+      sender: senderId,
+      senderUsername: sender.username,
+      text: text || '',
+      fileUrl: fileUrl || null,
+      fileName: fileName || null,
+      fileType: fileType || null
+    });
+
+    await message.save();
+    res.json(message);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============ SOCKET.IO ============
 
 io.on('connection', (socket) => {
@@ -537,6 +769,70 @@ io.on('connection', (socket) => {
         users: Array.from(users.values()).map(u => ({ username: u.username, userId: u.userId }))
       });
       console.log(`${user.username} left. Total users: ${users.size}`);
+    }
+  });
+
+  // Group chat - join group
+  socket.on('joinGroup', (data) => {
+    const { groupId } = data;
+    socket.join(`group-${groupId}`);
+    console.log(`User joined group: ${groupId}`);
+  });
+
+  // Group chat - leave group
+  socket.on('leaveGroup', (data) => {
+    const { groupId } = data;
+    socket.leave(`group-${groupId}`);
+    console.log(`User left group: ${groupId}`);
+  });
+
+  // Group message
+  socket.on('groupMessage', async (data) => {
+    try {
+      const { groupId, text, fileUrl, fileName, fileType } = data;
+      const user = users.get(socket.id);
+      if (!user) return;
+
+      const message = new GroupMessage({
+        groupId,
+        sender: user.userId,
+        senderUsername: user.username,
+        text: text || '',
+        fileUrl: fileUrl || null,
+        fileName: fileName || null,
+        fileType: fileType || null
+      });
+
+      await message.save();
+
+      const messageData = {
+        _id: message._id,
+        groupId,
+        username: user.username,
+        userId: user.userId,
+        text: data.text || '',
+        fileUrl: data.fileUrl || null,
+        fileName: data.fileName || null,
+        fileType: data.fileType || null,
+        timestamp: message.timestamp
+      };
+
+      io.to(`group-${groupId}`).emit('groupMessage', messageData);
+      console.log(`Group message in ${groupId} from ${user.username}`);
+    } catch (error) {
+      console.error('Group message error:', error);
+    }
+  });
+
+  // Group typing indicator
+  socket.on('groupTyping', (data) => {
+    const { groupId, isTyping } = data;
+    const user = users.get(socket.id);
+    if (user) {
+      socket.to(`group-${groupId}`).emit('groupUserTyping', {
+        username: user.username,
+        isTyping
+      });
     }
   });
 });

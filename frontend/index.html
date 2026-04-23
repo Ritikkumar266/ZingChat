@@ -26,6 +26,13 @@
             <button type="button" id="togglePassword" style="background: none; border: none; cursor: pointer; font-size: 24px; padding: 5px 10px;">👁️</button>
           </div>
           <button id="loginBtn">Login</button>
+          
+          <!-- OAuth Buttons -->
+          <div style="margin: 15px 0; display: flex; gap: 10px;">
+            <a href="/api/auth/google" style="flex: 1; padding: 10px; background: #db4437; color: white; border: none; border-radius: 5px; text-align: center; text-decoration: none; cursor: pointer; font-weight: bold;">🔴 Google</a>
+            <a href="/api/auth/github" style="flex: 1; padding: 10px; background: #333; color: white; border: none; border-radius: 5px; text-align: center; text-decoration: none; cursor: pointer; font-weight: bold;">⚫ GitHub</a>
+          </div>
+          
           <p>Don't have an account? <a href="#" onclick="toggleAuthForm()">Sign up</a></p>
           <p style="text-align: center; margin-top: 10px;"><a href="#" onclick="showForgotPassword()" style="font-size: 12px; color: #667eea;">Forgot Password?</a></p>
         </div>
@@ -80,6 +87,7 @@
         <div class="sidebar">
           <div class="sidebar-header">
             <h3>💬 Conversations</h3>
+            <button id="createGroupBtn" title="Create group" style="background: none; border: none; cursor: pointer; font-size: 18px;">➕</button>
           </div>
           <div id="conversationsList" class="users-list"></div>
           
@@ -108,8 +116,8 @@
               </div>
               <input type="text" id="messageSearchInput" placeholder="🔍 Search messages..." class="message-search-input" style="display: none;">
               <div class="chat-header-actions">
-                <button class="header-action-btn" id="searchMessagesBtn" title="Search messages">�</button>
-                <button class="header-action-btn" id="callBtn" title="Voice call">�</button>
+                <button class="header-action-btn" id="searchMessagesBtn" title="Search messages">🔍</button>
+                <button class="header-action-btn" id="callBtn" title="Voice call">☎️</button>
                 <button class="header-action-btn" id="videoBtn" title="Video call">📹</button>
                 <button class="header-action-btn" id="infoBtn" title="User info">ℹ️</button>
               </div>
@@ -201,6 +209,22 @@
       <span class="reaction-item" data-reaction="😮">😮</span>
       <span class="reaction-item" data-reaction="😢">😢</span>
       <span class="reaction-item" data-reaction="🔥">🔥</span>
+    </div>
+  </div>
+
+  <!-- Create Group Modal -->
+  <div id="createGroupModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+      <button class="modal-close" onclick="document.getElementById('createGroupModal').style.display='none'">✕</button>
+      <h2>Create New Group</h2>
+      <input type="text" id="groupName" placeholder="Group name" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border); border-radius: 5px;">
+      <textarea id="groupDescription" placeholder="Group description (optional)" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border); border-radius: 5px; resize: vertical; height: 80px;"></textarea>
+      <div style="margin: 15px 0;">
+        <label style="display: block; margin-bottom: 10px; font-weight: bold;">Select members:</label>
+        <div id="groupMembersList" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 5px; padding: 10px;"></div>
+      </div>
+      <button id="createGroupSubmitBtn" style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Create Group</button>
+      <div id="groupError" style="color: red; margin-top: 10px; display: none;"></div>
     </div>
   </div>
 
