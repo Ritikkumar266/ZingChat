@@ -1278,7 +1278,7 @@ function displayGroupMessage(message) {
   messagesList.appendChild(messageEl);
 }
 
-// Override sendMessage to handle group messages
+// Override sendMessage to handle both group and private messages
 const originalSendMessage = sendMessage;
 async function sendMessage() {
   if (selectedGroupId) {
@@ -1310,13 +1310,43 @@ async function sendMessage() {
           fileName: message.fileName,
           fileType: message.fileType
         });
+      } else {
+        showNotification('Failed to send message', 'error');
       }
     } catch (error) {
       console.error('Error sending group message:', error);
+      showNotification('Error sending message', 'error');
     }
   } else if (selectedUserId) {
     // Send private message
-    await originalSendMessage();
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    try {
+      const response = await fetch(getApiUrl('/api/private-messages'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          receiverId: selectedUserId,
+          text: text
+        })
+      });
+
+      if (response.ok) {
+        messageInput.value = '';
+        const message = await response.json();
+        displayPrivateMessage(message);
+        scrollToBottom();
+      } else {
+        showNotification('Failed to send message', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      showNotification('Error sending message', 'error');
+    }
   } else {
     showNotification('Please select a user or group first', 'error');
   }
