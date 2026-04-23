@@ -402,6 +402,15 @@ async function handleRegister() {
 function enterChat() {
   authScreen.classList.remove('active');
   chatScreen.classList.add('active');
+  
+  // Ensure token and user are saved
+  if (token) {
+    localStorage.setItem('token', token);
+  }
+  if (currentUser) {
+    localStorage.setItem('user', JSON.stringify(currentUser));
+  }
+  
   loadAllUsers();
   loadGroups();
   messageInput.focus();
