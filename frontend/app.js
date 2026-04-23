@@ -474,7 +474,7 @@ async function handleSendResetOTP() {
   }
 
   try {
-    const response = await fetch('/api/auth/forgot-password', {
+    const response = await fetch(getApiUrl('/api/auth/forgot-password'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -507,7 +507,7 @@ async function handleVerifyResetOTP() {
   }
 
   try {
-    const response = await fetch('/api/auth/verify-reset-otp', {
+    const response = await fetch(getApiUrl('/api/auth/verify-reset-otp'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp })
@@ -553,7 +553,7 @@ async function handleResetPassword() {
   }
 
   try {
-    const response = await fetch('/api/auth/reset-password', {
+    const response = await fetch(getApiUrl('/api/auth/reset-password'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp, newPassword })
