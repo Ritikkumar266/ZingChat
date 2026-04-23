@@ -919,7 +919,11 @@ socket.on('userOffline', (data) => {
 
 // Listen for new private messages
 socket.on('privateMessage', (message) => {
-  if (message.sender.toString() === selectedUserId || message.receiver.toString() === selectedUserId) {
+  const senderId = message.sender?.toString ? message.sender.toString() : message.sender;
+  const receiverId = message.receiver?.toString ? message.receiver.toString() : message.receiver;
+  const selectedId = selectedUserId?.toString ? selectedUserId.toString() : selectedUserId;
+  
+  if (senderId === selectedId || receiverId === selectedId) {
     displayPrivateMessage(message);
     scrollToBottom();
   }
@@ -927,7 +931,12 @@ socket.on('privateMessage', (message) => {
 
 // Listen for private messages via Socket.io
 socket.on('privateMessageReceived', (message) => {
-  if (message.sender.toString() === selectedUserId || message.receiver.toString() === selectedUserId) {
+  // Convert to strings for comparison
+  const senderId = message.sender?.toString ? message.sender.toString() : message.sender;
+  const receiverId = message.receiver?.toString ? message.receiver.toString() : message.receiver;
+  const selectedId = selectedUserId?.toString ? selectedUserId.toString() : selectedUserId;
+  
+  if (senderId === selectedId || receiverId === selectedId) {
     displayPrivateMessage(message);
     scrollToBottom();
   }
