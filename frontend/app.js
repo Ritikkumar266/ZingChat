@@ -188,9 +188,12 @@ function attachEventListeners() {
   // Search functionality
   searchInput.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase();
+    
+    // Search in all user items (both conversations and all users)
     document.querySelectorAll('.user-item').forEach(item => {
-      const name = item.textContent.toLowerCase();
-      item.style.display = name.includes(query) ? 'flex' : 'none';
+      const username = item.querySelector('.user-name')?.textContent.toLowerCase() || '';
+      const shouldShow = username.includes(query) || query === '';
+      item.style.display = shouldShow ? 'flex' : 'none';
     });
   });
   
