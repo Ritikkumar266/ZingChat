@@ -5,15 +5,15 @@
 }
 
 :root {
-  --primary: #667eea;
-  --primary-dark: #5568d3;
-  --secondary: #764ba2;
+  --primary: #25d366;
+  --primary-dark: #1fa857;
+  --secondary: #128c7e;
   --success: #4caf50;
   --danger: #f44336;
   --warning: #ff9800;
   --bg-primary: #ffffff;
-  --bg-secondary: #f5f7fa;
-  --bg-tertiary: #e8ecf1;
+  --bg-secondary: #f0f0f0;
+  --bg-tertiary: #e8e8e8;
   --text: #2c3e50;
   --text-light: #7f8c8d;
   --border: #ddd;
@@ -59,7 +59,7 @@ body {
 
 /* ============ AUTH SCREEN ============ */
 #authScreen {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
   justify-content: center;
   align-items: center;
 }
@@ -254,7 +254,7 @@ body {
 }
 
 .chat-header {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
   color: white;
   padding: 15px 20px;
   display: flex;
@@ -334,7 +334,7 @@ body {
 /* ============ SIDEBAR ============ */
 .sidebar {
   width: 280px;
-  background: var(--bg-secondary);
+  background: #ffffff;
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -346,7 +346,7 @@ body {
   padding: 15px;
   font-weight: 600;
   color: var(--text);
-  background: var(--bg-tertiary);
+  background: #f0f0f0;
   animation: slideInLeft 0.4s ease-out;
 }
 
@@ -384,9 +384,9 @@ body {
 }
 
 .user-item.active {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: linear-gradient(135deg, #25d366, #1fa857);
   color: white;
-  border-color: var(--primary);
+  border-color: #25d366;
   box-shadow: var(--shadow-lg);
 }
 
@@ -466,6 +466,15 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: linear-gradient(135deg, #ecf0f1 0%, #f8f9fa 100%);
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 35px,
+      rgba(255, 255, 255, 0.05) 35px,
+      rgba(255, 255, 255, 0.05) 70px
+    );
 }
 
 .messages-list {
@@ -527,17 +536,20 @@ body {
 }
 
 .message.sent .message-bubble {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: linear-gradient(135deg, #25d366, #1fa857);
   color: white;
   border-bottom-right-radius: 4px;
   animation: slideInRight 0.3s ease-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .message.received .message-bubble {
-  background: var(--bg-secondary);
+  background: #ffffff;
   color: var(--text);
   border-bottom-left-radius: 4px;
   animation: slideInLeft 0.3s ease-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
 }
 
 .message-bubble:hover {
@@ -706,7 +718,7 @@ body {
 
 .send-btn-enhanced {
   padding: 10px 24px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: linear-gradient(135deg, #25d366, #1fa857);
   color: white;
   border: none;
   border-radius: 24px;
