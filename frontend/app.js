@@ -111,6 +111,22 @@ function attachEventListeners() {
     togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
   });
 
+  // Profile button
+  const profileBtn = document.getElementById('profileBtn');
+  if (profileBtn) {
+    profileBtn.addEventListener('click', showProfileModal);
+  }
+
+  // DP upload
+  const dpUpload = document.getElementById('dpUpload');
+  const profileAvatar = document.getElementById('profileAvatar');
+  if (profileAvatar) {
+    profileAvatar.addEventListener('click', () => dpUpload.click());
+  }
+  if (dpUpload) {
+    dpUpload.addEventListener('change', handleDPUpload);
+  }
+
   sendBtn.addEventListener('click', sendMessage);
   messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1418,3 +1434,74 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM loaded, initializing group chat');
   initGroupChat();
 });
+
+
+// ============ PROFILE FUNCTIONS ============
+
+function showProfileModal() {
+  const profileModal = document.getElementById('profileModal');
+  const profileUsername = document.getElementById('profileUsername');
+  const profileEmail = document.getElementById('profileEmail');
+  const profileJoined = document.getElementById('profileJoined');
+  const profileAvatar = document.getElementById('profileAvatar');
+  
+  if (currentUser) {
+    profileUsername.value = currentUser.username;
+    profileEmail.value = currentUser.email;
+    profileJoined.value = new Date().toLocaleDateString();
+    
+    // Set avatar
+    if (currentUser.avatar) {
+      profileAvatar.style.backgroundImage = `url(${currentUser.avatar})`;
+      profileAvatar.style.backgroundSize = 'cover';
+      profileAvatar.textContent = '';
+    } else {
+      profileAvatar.style.backgroundImage = 'linear-gradient(135deg, #25d366, #128c7e)';
+      profileAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
+    }
+  }
+  
+  profileModal.style.display = 'flex';
+}
+
+async function handleDPUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    showNotification('Image size must be less than 5MB', 'error');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch(getApiUrl('/api/upload'), {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Update user avatar
+      currentUser.avatar = data.fileUrl;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+      
+      // Update avatar display
+      const profileAvatar = document.getElementById('profileAvatar');
+      profileAvatar.style.backgroundImage = `url(${data.fileUrl})`;
+      profileAvatar.style.backgroundSize = 'cover';
+      profileAvatar.textContent = '';
+      
+      showNotification('Profile picture updated!', 'success');
+    } else {
+      showNotification('Failed to upload image', 'error');
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    showNotification('Error uploading image', 'error');
+  }
+}

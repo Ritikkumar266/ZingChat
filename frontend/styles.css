@@ -2217,3 +2217,21 @@ button, input, a {
   transform: scale(1.2) rotate(90deg);
   color: var(--primary);
 }
+
+
+/* ============ PROFILE BUTTON ============ */
+.profile-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.profile-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
