@@ -108,24 +108,6 @@ app.get('/api/auth/google/callback', passport.authenticate('google', { failureRe
   })}`);
 });
 
-// GitHub OAuth
-app.get('/api/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
-
-app.get('/api/auth/github/callback', passport.authenticate('github', { failureRedirect: '/' }), (req, res) => {
-  const token = jwt.sign(
-    { userId: req.user._id, username: req.user.username },
-    process.env.JWT_SECRET || 'secret',
-    { expiresIn: '7d' }
-  );
-  
-  res.redirect(`${process.env.FRONTEND_URL}?token=${token}&user=${JSON.stringify({
-    id: req.user._id,
-    username: req.user.username,
-    email: req.user.email,
-    avatar: req.user.avatar
-  })}`);
-});
-
 // Logout
 app.get('/api/auth/logout', (req, res) => {
   req.logout((err) => {
