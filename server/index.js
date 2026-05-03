@@ -37,8 +37,19 @@ const io = socketIo(server, {
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Serve frontend
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve landing page as default
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/landing.html'));
+});
+
+// Serve chat app
+app.get('/chat', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
 
 // Session middleware for OAuth
 app.use(session({

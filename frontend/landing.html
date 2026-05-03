@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZingChat - Connect Instantly</title>
+  <link rel="stylesheet" href="landing.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <span class="logo-icon">💬</span>
+        <span class="logo-text">ZingChat</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <button class="nav-btn" onclick="window.location.href='/chat'">Get Started</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1 class="hero-title">
+          Connect <span class="gradient-text">Instantly</span><br>
+          Chat <span class="gradient-text">Seamlessly</span>
+        </h1>
+        <p class="hero-subtitle">
+          Experience the future of messaging with ZingChat. Real-time conversations, 
+          group chats, file sharing, and more - all in one beautiful platform.
+        </p>
+        <div class="hero-buttons">
+          <button class="btn-primary" onclick="window.location.href='/chat'">
+            Start Chatting Now
+            <span class="btn-icon">🚀</span>
+          </button>
+          <button class="btn-secondary" onclick="scrollToFeatures()">
+            Learn More
+            <span class="btn-icon">📖</span>
+          </button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-number">10K+</span>
+            <span class="stat-label">Active Users</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">1M+</span>
+            <span class="stat-label">Messages Sent</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">99.9%</span>
+            <span class="stat-label">Uptime</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="chat-mockup">
+          <div class="mockup-header">
+            <div class="mockup-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="mockup-title">ZingChat</span>
+          </div>
+          <div class="mockup-content">
+            <div class="mock-message received">
+              <div class="mock-avatar">A</div>
+              <div class="mock-bubble">Hey! How's the new chat app?</div>
+            </div>
+            <div class="mock-message sent">
+              <div class="mock-bubble">It's amazing! Love the real-time features 🚀</div>
+            </div>
+            <div class="mock-message received">
+              <div class="mock-avatar">A</div>
+              <div class="mock-bubble">The UI is so clean and modern!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>Powerful Features</h2>
+        <p>Everything you need for seamless communication</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Real-time Messaging</h3>
+          <p>Instant message delivery with Socket.io technology. See messages appear as they're typed.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">👥</div>
+          <h3>Group Chats</h3>
+          <p>Create groups, add members, and chat with multiple people simultaneously.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📁</div>
+          <h3>File Sharing</h3>
+          <p>Share images, documents, and files up to 10MB with drag-and-drop simplicity.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Secure & Private</h3>
+          <p>End-to-end encryption and secure authentication keep your conversations private.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌙</div>
+          <h3>Dark Mode</h3>
+          <p>Switch between light and dark themes for comfortable chatting any time of day.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h3>Responsive Design</h3>
+          <p>Works perfectly on desktop, tablet, and mobile devices with adaptive layouts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about">
+    <div class="container">
+      <div class="about-content">
+        <div class="about-text">
+          <h2>Built for Modern Communication</h2>
+          <p>
+            ZingChat is more than just a messaging app - it's a complete communication platform 
+            designed for the modern world. With cutting-edge technology and intuitive design, 
+            we're redefining how people connect online.
+          </p>
+          <div class="about-features">
+            <div class="about-feature">
+              <span class="check-icon">✅</span>
+              <span>JWT Authentication</span>
+            </div>
+            <div class="about-feature">
+              <span class="check-icon">✅</span>
+              <span>OAuth Integration</span>
+            </div>
+            <div class="about-feature">
+              <span class="check-icon">✅</span>
+              <span>MongoDB Database</span>
+            </div>
+            <div class="about-feature">
+              <span class="check-icon">✅</span>
+              <span>Node.js Backend</span>
+            </div>
+          </div>
+        </div>
+        <div class="about-visual">
+          <div class="tech-stack">
+            <div class="tech-item">
+              <span class="tech-icon">⚛️</span>
+              <span>React</span>
+            </div>
+            <div class="tech-item">
+              <span class="tech-icon">🟢</span>
+              <span>Node.js</span>
+            </div>
+            <div class="tech-item">
+              <span class="tech-icon">🍃</span>
+              <span>MongoDB</span>
+            </div>
+            <div class="tech-item">
+              <span class="tech-icon">⚡</span>
+              <span>Socket.io</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Ready to Start Chatting?</h2>
+        <p>Join thousands of users already enjoying seamless communication with ZingChat</p>
+        <button class="btn-primary large" onclick="window.location.href='/chat'">
+          Get Started Free
+          <span class="btn-icon">🎉</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <span class="logo-icon">💬</span>
+            <span class="logo-text">ZingChat</span>
+          </div>
+          <p>Connect instantly, chat seamlessly.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Product</h4>
+            <a href="#features">Features</a>
+            <a href="#about">About</a>
+            <a href="/chat">Login</a>
+          </div>
+          <div class="footer-column">
+            <h4>Support</h4>
+            <a href="#contact">Contact</a>
+            <a href="#">Help Center</a>
+            <a href="#">Privacy Policy</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 ZingChat. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function scrollToFeatures() {
+      document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Animate on scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate');
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .about-text, .tech-stack').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
