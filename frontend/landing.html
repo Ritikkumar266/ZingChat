@@ -19,7 +19,8 @@
         <a href="#features">Features</a>
         <a href="#about">About</a>
         <a href="#contact">Contact</a>
-        <button class="nav-btn" onclick="window.location.href='/chat'">Get Started</button>
+        <button class="nav-btn" onclick="showAuthModal()">Login</button>
+        <button class="nav-btn signup" onclick="showAuthModal('signup')">Sign Up</button>
       </div>
     </div>
   </nav>
@@ -37,7 +38,7 @@
           group chats, file sharing, and more - all in one beautiful platform.
         </p>
         <div class="hero-buttons">
-          <button class="btn-primary" onclick="window.location.href='/chat'">
+          <button class="btn-primary" onclick="showAuthModal('signup')">
             Start Chatting Now
             <span class="btn-icon">🚀</span>
           </button>
@@ -189,7 +190,7 @@
       <div class="cta-content">
         <h2>Ready to Start Chatting?</h2>
         <p>Join thousands of users already enjoying seamless communication with ZingChat</p>
-        <button class="btn-primary large" onclick="window.location.href='/chat'">
+        <button class="btn-primary large" onclick="showAuthModal('signup')">
           Get Started Free
           <span class="btn-icon">🎉</span>
         </button>
@@ -213,7 +214,7 @@
             <h4>Product</h4>
             <a href="#features">Features</a>
             <a href="#about">About</a>
-            <a href="/chat">Login</a>
+            <a href="/chat">Already have an account? Login</a>
           </div>
           <div class="footer-column">
             <h4>Support</h4>
@@ -229,7 +230,508 @@
     </div>
   </footer>
 
+  <!-- Authentication Modal -->
+  <div id="authModal" class="auth-modal">
+    <div class="auth-modal-content">
+      <span class="auth-close" onclick="closeAuthModal()">&times;</span>
+      
+      <!-- Login Form -->
+      <div id="loginFormModal" class="auth-form active">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <span class="logo-icon">💬</span>
+            <span class="logo-text">ZingChat</span>
+          </div>
+          <h2>Welcome Back</h2>
+          <p>Sign in to continue chatting</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="input-group">
+            <input type="email" id="loginEmail" placeholder="Email" required>
+          </div>
+          <div class="input-group">
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <span class="toggle-password" onclick="togglePasswordVisibility('loginPassword')">👁️</span>
+          </div>
+          
+          <button type="submit" class="auth-btn primary">Login</button>
+          
+          <!-- OAuth Buttons -->
+          <div class="oauth-section">
+            <div class="divider">
+              <span>or continue with</span>
+            </div>
+            <a href="/api/auth/google" class="oauth-btn google">
+              <span>🔴</span> Google
+            </a>
+          </div>
+          
+          <div class="auth-links">
+            <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+            <p>Don't have an account? <a href="#" onclick="switchToSignup()">Sign up</a></p>
+          </div>
+        </form>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerFormModal" class="auth-form">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <span class="logo-icon">💬</span>
+            <span class="logo-text">ZingChat</span>
+          </div>
+          <h2>Create Account</h2>
+          <p>Join thousands of users on ZingChat</p>
+        </div>
+
+        <form id="registerForm" onsubmit="handleRegister(event)">
+          <div class="input-group">
+            <input type="email" id="registerEmail" placeholder="Email" required>
+            <button type="button" id="sendOtpBtn" class="otp-btn" onclick="handleSendOTP()">Send OTP</button>
+          </div>
+          
+          <div class="input-group" id="otpGroup" style="display: none;">
+            <input type="text" id="otpInput" placeholder="Enter OTP" maxlength="6">
+            <button type="button" id="verifyOtpBtn" class="otp-btn" onclick="handleVerifyOTP()">Verify</button>
+          </div>
+          
+          <div class="input-group" id="usernameGroup" style="display: none;">
+            <input type="text" id="registerUsername" placeholder="Username" required>
+          </div>
+          
+          <div class="input-group" id="passwordGroup" style="display: none;">
+            <input type="password" id="registerPassword" placeholder="Password" required>
+            <span class="toggle-password" onclick="togglePasswordVisibility('registerPassword')">👁️</span>
+          </div>
+          
+          <div class="input-group" id="confirmGroup" style="display: none;">
+            <input type="password" id="registerConfirm" placeholder="Confirm Password" required>
+          </div>
+          
+          <button type="submit" id="registerBtn" class="auth-btn primary" style="display: none;">Create Account</button>
+          
+          <div class="auth-links">
+            <p>Already have an account? <a href="#" onclick="switchToLogin()">Login</a></p>
+          </div>
+        </form>
+      </div>
+
+      <!-- Forgot Password Form -->
+      <div id="forgotPasswordFormModal" class="auth-form">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <span class="logo-icon">💬</span>
+            <span class="logo-text">ZingChat</span>
+          </div>
+          <h2>Reset Password</h2>
+          <p>Enter your email to reset password</p>
+        </div>
+
+        <form id="forgotForm" onsubmit="handleForgotPassword(event)">
+          <div class="input-group">
+            <input type="email" id="forgotEmail" placeholder="Email" required>
+            <button type="button" id="sendResetBtn" class="otp-btn" onclick="handleSendResetOTP()">Send OTP</button>
+          </div>
+          
+          <div class="input-group" id="resetOtpGroup" style="display: none;">
+            <input type="text" id="resetOtpInput" placeholder="Enter OTP" maxlength="6">
+            <button type="button" id="verifyResetOtpBtn" class="otp-btn" onclick="handleVerifyResetOTP()">Verify</button>
+          </div>
+          
+          <div class="input-group" id="newPasswordGroup" style="display: none;">
+            <input type="password" id="newPasswordInput" placeholder="New Password" required>
+          </div>
+          
+          <div class="input-group" id="confirmNewPasswordGroup" style="display: none;">
+            <input type="password" id="confirmPasswordInput" placeholder="Confirm New Password" required>
+          </div>
+          
+          <button type="submit" id="resetPasswordBtn" class="auth-btn primary" style="display: none;">Reset Password</button>
+          
+          <div class="auth-links">
+            <a href="#" onclick="switchToLogin()">Back to Login</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Error/Success Messages -->
+      <div id="authError" class="auth-message error"></div>
+      <div id="authSuccess" class="auth-message success"></div>
+    </div>
+  </div>
+
   <script>
+    // API Configuration
+    const API_BASE_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5000' 
+      : 'https://zingchat-backend.onrender.com';
+
+    function getApiUrl(endpoint) {
+      return `${API_BASE_URL}${endpoint}`;
+    }
+
+    // State
+    let otpVerified = false;
+
+    // Modal Functions
+    function showAuthModal(type = 'login') {
+      const modal = document.getElementById('authModal');
+      modal.style.display = 'flex';
+      
+      if (type === 'signup') {
+        switchToSignup();
+      } else {
+        switchToLogin();
+      }
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('authModal');
+      modal.style.display = 'none';
+      resetForms();
+    }
+
+    function switchToLogin() {
+      document.getElementById('loginFormModal').classList.add('active');
+      document.getElementById('registerFormModal').classList.remove('active');
+      document.getElementById('forgotPasswordFormModal').classList.remove('active');
+      resetForms();
+    }
+
+    function switchToSignup() {
+      document.getElementById('loginFormModal').classList.remove('active');
+      document.getElementById('registerFormModal').classList.add('active');
+      document.getElementById('forgotPasswordFormModal').classList.remove('active');
+      resetForms();
+    }
+
+    function showForgotPassword() {
+      document.getElementById('loginFormModal').classList.remove('active');
+      document.getElementById('registerFormModal').classList.remove('active');
+      document.getElementById('forgotPasswordFormModal').classList.add('active');
+      resetForms();
+    }
+
+    function resetForms() {
+      // Reset all forms
+      document.querySelectorAll('.auth-form form').forEach(form => form.reset());
+      
+      // Hide conditional elements
+      document.getElementById('otpGroup').style.display = 'none';
+      document.getElementById('usernameGroup').style.display = 'none';
+      document.getElementById('passwordGroup').style.display = 'none';
+      document.getElementById('confirmGroup').style.display = 'none';
+      document.getElementById('registerBtn').style.display = 'none';
+      
+      document.getElementById('resetOtpGroup').style.display = 'none';
+      document.getElementById('newPasswordGroup').style.display = 'none';
+      document.getElementById('confirmNewPasswordGroup').style.display = 'none';
+      document.getElementById('resetPasswordBtn').style.display = 'none';
+      
+      // Reset buttons
+      document.getElementById('sendOtpBtn').disabled = false;
+      document.getElementById('registerEmail').disabled = false;
+      document.getElementById('sendResetBtn').disabled = false;
+      document.getElementById('forgotEmail').disabled = false;
+      
+      // Clear messages
+      document.getElementById('authError').textContent = '';
+      document.getElementById('authSuccess').textContent = '';
+      
+      otpVerified = false;
+    }
+
+    function togglePasswordVisibility(inputId) {
+      const input = document.getElementById(inputId);
+      const toggle = input.nextElementSibling;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        toggle.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        toggle.textContent = '👁️';
+      }
+    }
+
+    function showAuthError(message) {
+      const errorEl = document.getElementById('authError');
+      const successEl = document.getElementById('authSuccess');
+      errorEl.textContent = message;
+      successEl.textContent = '';
+    }
+
+    function showAuthSuccess(message) {
+      const errorEl = document.getElementById('authError');
+      const successEl = document.getElementById('authSuccess');
+      successEl.textContent = message;
+      errorEl.textContent = '';
+    }
+
+    // Authentication Functions
+    async function handleLogin(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+
+      if (!email || !password) {
+        showAuthError('Please fill in all fields');
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl('/api/auth/login'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          showAuthError(data.error || 'Login failed');
+          return;
+        }
+
+        // Store token and user data
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        showAuthSuccess('Login successful! Redirecting...');
+        setTimeout(() => {
+          window.location.href = '/chat';
+        }, 1000);
+      } catch (error) {
+        showAuthError('Connection error: ' + error.message);
+      }
+    }
+
+    async function handleSendOTP() {
+      const email = document.getElementById('registerEmail').value.trim();
+      if (!email) {
+        showAuthError('Please enter email');
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl('/api/auth/send-otp'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          showAuthError(data.error || 'Failed to send OTP');
+          return;
+        }
+
+        showAuthSuccess('OTP sent to your email');
+        document.getElementById('otpGroup').style.display = 'block';
+        document.getElementById('sendOtpBtn').disabled = true;
+        document.getElementById('registerEmail').disabled = true;
+      } catch (error) {
+        showAuthError('Error: ' + error.message);
+      }
+    }
+
+    async function handleVerifyOTP() {
+      const email = document.getElementById('registerEmail').value.trim();
+      const otp = document.getElementById('otpInput').value.trim();
+
+      if (!otp) {
+        showAuthError('Please enter OTP');
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl('/api/auth/verify-otp'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          showAuthError(data.error || 'Invalid OTP');
+          return;
+        }
+
+        otpVerified = true;
+        showAuthSuccess('Email verified! Complete registration');
+        document.getElementById('usernameGroup').style.display = 'block';
+        document.getElementById('passwordGroup').style.display = 'block';
+        document.getElementById('confirmGroup').style.display = 'block';
+        document.getElementById('registerBtn').style.display = 'block';
+        document.getElementById('otpGroup').style.display = 'none';
+      } catch (error) {
+        showAuthError('Error: ' + error.message);
+      }
+    }
+
+    async function handleRegister(event) {
+      event.preventDefault();
+      
+      if (!otpVerified) {
+        showAuthError('Please verify your email first');
+        return;
+      }
+
+      const username = document.getElementById('registerUsername').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value.trim();
+      const confirm = document.getElementById('registerConfirm').value.trim();
+
+      if (!username || !email || !password || !confirm) {
+        showAuthError('Please fill in all fields');
+        return;
+      }
+
+      if (password !== confirm) {
+        showAuthError('Passwords do not match');
+        return;
+      }
+
+      if (password.length < 6) {
+        showAuthError('Password must be at least 6 characters');
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl('/api/auth/register'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          showAuthError(data.error || 'Registration failed');
+          return;
+        }
+
+        // Store token and user data
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        showAuthSuccess('Registration successful! Redirecting...');
+        setTimeout(() => {
+          window.location.href = '/chat';
+        }, 1000);
+      } catch (error) {
+        showAuthError('Connection error: ' + error.message);
+      }
+    }
+
+    // Forgot Password Functions
+    async function handleSendResetOTP() {
+      const email = document.getElementById('forgotEmail').value.trim();
+      if (!email) {
+        showAuthError('Please enter email');
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl('/api/auth/forgot-password'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          showAuthError(data.error || 'Failed to send OTP');
+          return;
+        }
+
+        showAuthSuccess('OTP sent to your email');
+        document.getElementById('resetOtpGroup').style.display = 'block';
+        document.getElementById('sendResetBtn').disabled = true;
+        document.getElementById('forgotEmail').disabled = true;
+      } catch (error) {
+        showAuthError('Error: ' + error.message);
+      }
+    }
+
+    async function handleVerifyResetOTP() {
+      const email = document.getElementById('forgotEmail').value.trim();
+      const otp = document.getElementById('resetOtpInput').value.trim();
+
+      if (!otp) {
+        showAuthError('Please enter OTP');
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl('/api/auth/verify-reset-otp'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          showAuthError(data.error || 'Invalid OTP');
+          return;
+        }
+
+        showAuthSuccess('OTP verified! Enter new password');
+        document.getElementById('newPasswordGroup').style.display = 'block';
+        document.getElementById('confirmNewPasswordGroup').style.display = 'block';
+        document.getElementById('resetPasswordBtn').style.display = 'block';
+        document.getElementById('resetOtpGroup').style.display = 'none';
+      } catch (error) {
+        showAuthError('Error: ' + error.message);
+      }
+    }
+
+    async function handleForgotPassword(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('forgotEmail').value.trim();
+      const otp = document.getElementById('resetOtpInput').value.trim();
+      const newPassword = document.getElementById('newPasswordInput').value.trim();
+      const confirmPassword = document.getElementById('confirmPasswordInput').value.trim();
+
+      if (!newPassword || !confirmPassword) {
+        showAuthError('Please enter both passwords');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showAuthError('Passwords do not match');
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        showAuthError('Password must be at least 6 characters');
+        return;
+      }
+
+      try {
+        const response = await fetch(getApiUrl('/api/auth/reset-password'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp, newPassword })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          showAuthError(data.error || 'Password reset failed');
+          return;
+        }
+
+        showAuthSuccess('Password reset successfully!');
+        setTimeout(() => {
+          switchToLogin();
+        }, 1500);
+      } catch (error) {
+        showAuthError('Error: ' + error.message);
+      }
+    }
+
+    // Existing landing page functions
     function scrollToFeatures() {
       document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
     }
@@ -250,6 +752,23 @@
 
     document.querySelectorAll('.feature-card, .about-text, .tech-stack').forEach(el => {
       observer.observe(el);
+    });
+
+    // Close modal when clicking outside
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById('authModal');
+      if (e.target === modal) {
+        closeAuthModal();
+      }
+    });
+
+    // Check if user is already logged in
+    window.addEventListener('load', () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        // User is already logged in, redirect to chat
+        window.location.href = '/chat';
+      }
     });
   </script>
 </body>
