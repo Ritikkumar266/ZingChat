@@ -6,7 +6,7 @@ const config = {
   },
   production: {
     BACKEND_URL: 'https://zingchat-backend.onrender.com',
-    FRONTEND_URL: 'https://zingchat-frontend.onrender.com'
+    FRONTEND_URL: 'https://zingchat-s06a.onrender.com'
   }
 };
 
