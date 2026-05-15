@@ -24,3 +24,9 @@ services:
         scope: build
       - key: FRONTEND_URL
         scope: build
+
+  - type: static
+    name: zingchat-frontend
+    buildCommand: echo "Static files ready"
+    publishPath: ./frontend
+    pullRequestPreviewsEnabled: false
