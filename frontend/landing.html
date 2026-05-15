@@ -341,16 +341,8 @@
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script>
-    // API Configuration
-    const API_BASE_URL = window.location.hostname === 'localhost' 
-      ? 'http://localhost:5000' 
-      : 'https://zingchat-backend.onrender.com';
-
-    function getApiUrl(endpoint) {
-      return `${API_BASE_URL}${endpoint}`;
-    }
-
     // Modal Functions
     function showAuthModal(type = 'login') {
       const modal = document.getElementById('authModal');

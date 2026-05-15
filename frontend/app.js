@@ -1,15 +1,5 @@
-// For production, use the Render backend URL
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:5000' 
-  : 'https://zingchat-backend.onrender.com';
-
-// Helper function to get full API URL
-function getApiUrl(endpoint) {
-  return `${API_BASE_URL}${endpoint}`;
-}
-
 // Initialize Socket.io with correct backend URL
-const socket = io(API_BASE_URL);
+const socket = io(window.APP_CONFIG.BACKEND_URL);
 
 // DOM ELEMENTS
 let authScreen, chatScreen, loginForm, registerForm, loginEmail, loginPassword, loginBtn;

@@ -23,10 +23,17 @@ services:
       - key: GITHUB_CLIENT_SECRET
         scope: build
       - key: FRONTEND_URL
-        scope: build
+        value: https://zingchat-frontend.onrender.com
+      - key: BACKEND_URL
+        value: https://zingchat-backend.onrender.com
 
   - type: static
     name: zingchat-frontend
     buildCommand: echo "Static files ready"
     publishPath: ./frontend
     pullRequestPreviewsEnabled: false
+    envVars:
+      - key: VITE_BACKEND_URL
+        value: https://zingchat-backend.onrender.com
+      - key: VITE_FRONTEND_URL
+        value: https://zingchat-frontend.onrender.com
