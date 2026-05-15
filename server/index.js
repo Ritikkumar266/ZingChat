@@ -129,65 +129,17 @@ app.get('/api/auth/logout', (req, res) => {
 
 // ============ AUTH ROUTES ============
 
-// Send OTP
-app.post('/api/auth/send-otp', async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ error: 'Email required' });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
-    }
-
-    const otp = generateOTP();
-    await OTP.deleteMany({ email }); // Delete old OTPs
-    await OTP.create({ email, otp });
-
-    const result = await sendOTP(email, otp);
-    if (!result.success) {
-      console.error('Email send failed:', result.message);
-      return res.status(500).json({ error: 'Failed to send OTP. Please check your email configuration.' });
-    }
-
-    res.json({ message: 'OTP sent successfully to your email' });
-  } catch (error) {
-    console.error('Send OTP error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Verify OTP
-app.post('/api/auth/verify-otp', async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    if (!email || !otp) {
-      return res.status(400).json({ error: 'Email and OTP required' });
-    }
-
-    const otpRecord = await OTP.findOne({ email, otp });
-    if (!otpRecord) {
-      return res.status(401).json({ error: 'Invalid or expired OTP' });
-    }
-
-    await OTP.deleteOne({ _id: otpRecord._id });
-    res.json({ message: 'OTP verified successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Register
+// Register (Simplified - No OTP)
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'All fields required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
     const existingUser = await User.findOne({ $or: [{ username }, { email }] });

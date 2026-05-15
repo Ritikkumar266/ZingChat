@@ -287,29 +287,23 @@
 
         <form id="registerForm" onsubmit="handleRegister(event)">
           <div class="input-group">
-            <input type="email" id="registerEmail" placeholder="Email" required>
-            <button type="button" id="sendOtpBtn" class="otp-btn" onclick="handleSendOTP()">Send OTP</button>
-          </div>
-          
-          <div class="input-group" id="otpGroup" style="display: none;">
-            <input type="text" id="otpInput" placeholder="Enter OTP" maxlength="6">
-            <button type="button" id="verifyOtpBtn" class="otp-btn" onclick="handleVerifyOTP()">Verify</button>
-          </div>
-          
-          <div class="input-group" id="usernameGroup" style="display: none;">
             <input type="text" id="registerUsername" placeholder="Username" required>
           </div>
           
-          <div class="input-group" id="passwordGroup" style="display: none;">
+          <div class="input-group">
+            <input type="email" id="registerEmail" placeholder="Email" required>
+          </div>
+          
+          <div class="input-group">
             <input type="password" id="registerPassword" placeholder="Password" required>
             <span class="toggle-password" onclick="togglePasswordVisibility('registerPassword')">👁️</span>
           </div>
           
-          <div class="input-group" id="confirmGroup" style="display: none;">
+          <div class="input-group">
             <input type="password" id="registerConfirm" placeholder="Confirm Password" required>
           </div>
           
-          <button type="submit" id="registerBtn" class="auth-btn primary" style="display: none;">Create Account</button>
+          <button type="submit" id="registerBtn" class="auth-btn primary">Create Account</button>
           
           <div class="auth-links">
             <p>Already have an account? <a href="#" onclick="switchToLogin()">Login</a></p>
@@ -372,7 +366,8 @@
     }
 
     // State
-    let otpVerified = false;
+    let currentUser = null;
+    let token = null;
 
     // Modal Functions
     function showAuthModal(type = 'login') {
@@ -417,29 +412,19 @@
       // Reset all forms
       document.querySelectorAll('.auth-form form').forEach(form => form.reset());
       
-      // Hide conditional elements
-      document.getElementById('otpGroup').style.display = 'none';
-      document.getElementById('usernameGroup').style.display = 'none';
-      document.getElementById('passwordGroup').style.display = 'none';
-      document.getElementById('confirmGroup').style.display = 'none';
-      document.getElementById('registerBtn').style.display = 'none';
-      
+      // Hide conditional elements for forgot password
       document.getElementById('resetOtpGroup').style.display = 'none';
       document.getElementById('newPasswordGroup').style.display = 'none';
       document.getElementById('confirmNewPasswordGroup').style.display = 'none';
       document.getElementById('resetPasswordBtn').style.display = 'none';
       
       // Reset buttons
-      document.getElementById('sendOtpBtn').disabled = false;
-      document.getElementById('registerEmail').disabled = false;
       document.getElementById('sendResetBtn').disabled = false;
       document.getElementById('forgotEmail').disabled = false;
       
       // Clear messages
       document.getElementById('authError').textContent = '';
       document.getElementById('authSuccess').textContent = '';
-      
-      otpVerified = false;
     }
 
     function togglePasswordVisibility(inputId) {
@@ -580,11 +565,6 @@
     async function handleRegister(event) {
       event.preventDefault();
       
-      if (!otpVerified) {
-        showAuthError('Please verify your email first');
-        return;
-      }
-
       const username = document.getElementById('registerUsername').value.trim();
       const email = document.getElementById('registerEmail').value.trim();
       const password = document.getElementById('registerPassword').value.trim();
