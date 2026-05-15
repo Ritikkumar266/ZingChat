@@ -1323,9 +1323,6 @@ function displayGroupMessage(message) {
   const messagesList = document.getElementById('messagesList');
   messagesList.appendChild(messageEl);
 }
-
-// Override sendMessage to handle both group and private messages
-const originalSendMessage = sendMessage;
 async function sendMessage() {
   if (selectedGroupId) {
     // Send group message
