@@ -747,43 +747,29 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Handle private messages via Socket.io
+  // Handle private messages via Socket.io (for real-time broadcasting only)
   socket.on('privateMessage', async (data) => {
     try {
       const user = users.get(socket.id);
       if (!user) return;
 
-      const { receiverId, text, fileUrl, fileName, fileType } = data;
+      const { receiverId, text } = data;
 
-      const message = new PrivateMessage({
-        sender: user.userId,
-        receiver: receiverId,
-        senderUsername: user.username,
-        text: text || '',
-        fileUrl: fileUrl || null,
-        fileName: fileName || null,
-        fileType: fileType || null
-      });
-
-      await message.save();
-
+      // Don't save to database here - API endpoint already did that
+      // Just broadcast the message for real-time delivery
       const messageData = {
-        _id: message._id,
         sender: user.userId,
         receiver: receiverId,
         senderUsername: user.username,
         text: text || '',
-        fileUrl: fileUrl || null,
-        fileName: fileName || null,
-        fileType: fileType || null,
-        timestamp: message.timestamp
+        timestamp: new Date()
       };
 
       // Emit to both sender and receiver
       io.emit('privateMessageReceived', messageData);
-      console.log(`Private message from ${user.username} to ${receiverId}`);
+      console.log(`Private message broadcasted from ${user.username} to ${receiverId}`);
     } catch (error) {
-      console.error('Private message error:', error);
+      console.error('Private message broadcast error:', error);
     }
   });
 
