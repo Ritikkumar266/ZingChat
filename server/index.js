@@ -147,19 +147,15 @@ app.post('/api/auth/send-otp', async (req, res) => {
     await OTP.deleteMany({ email }); // Delete old OTPs
     await OTP.create({ email, otp });
 
-    // Temporarily skip email sending for testing
-    console.log(`OTP for ${email}: ${otp}`);
-    res.json({ message: 'OTP sent successfully (check server logs for OTP)' });
-    
-    // Original email sending code (commented out for testing)
-    /*
     const result = await sendOTP(email, otp);
     if (!result.success) {
-      return res.status(500).json({ error: 'Failed to send OTP' });
+      console.error('Email send failed:', result.message);
+      return res.status(500).json({ error: 'Failed to send OTP. Please check your email configuration.' });
     }
-    res.json({ message: 'OTP sent successfully' });
-    */
+
+    res.json({ message: 'OTP sent successfully to your email' });
   } catch (error) {
+    console.error('Send OTP error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -271,11 +267,13 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
     const result = await sendOTP(email, otp);
     if (!result.success) {
-      return res.status(500).json({ error: 'Failed to send OTP' });
+      console.error('Password reset email failed:', result.message);
+      return res.status(500).json({ error: 'Failed to send OTP. Please check your email configuration.' });
     }
 
     res.json({ message: 'OTP sent to your email' });
   } catch (error) {
+    console.error('Forgot password error:', error);
     res.status(500).json({ error: error.message });
   }
 });
