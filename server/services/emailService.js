@@ -1,5 +1,3 @@
-const nodemailer = require('nodemailer');
-
 // TEMPORARY: Since Render blocks SMTP, we'll use a mock email service for now
 const sendOTP = async (email, otp) => {
   try {
