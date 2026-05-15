@@ -147,12 +147,18 @@ app.post('/api/auth/send-otp', async (req, res) => {
     await OTP.deleteMany({ email }); // Delete old OTPs
     await OTP.create({ email, otp });
 
+    // Temporarily skip email sending for testing
+    console.log(`OTP for ${email}: ${otp}`);
+    res.json({ message: 'OTP sent successfully (check server logs for OTP)' });
+    
+    // Original email sending code (commented out for testing)
+    /*
     const result = await sendOTP(email, otp);
     if (!result.success) {
       return res.status(500).json({ error: 'Failed to send OTP' });
     }
-
     res.json({ message: 'OTP sent successfully' });
+    */
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
