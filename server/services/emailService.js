@@ -1,23 +1,34 @@
 const nodemailer = require('nodemailer');
 
-const nodemailer = require('nodemailer');
-
-// Use different SMTP configuration that works better with hosting platforms
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // Use SSL
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
-
+// TEMPORARY: Since Render blocks SMTP, we'll use a mock email service for now
 const sendOTP = async (email, otp) => {
   try {
+    // Log the OTP for development/testing
+    console.log(`📧 OTP for ${email}: ${otp}`);
+    console.log(`📧 Email would be sent to: ${email}`);
+    console.log(`📧 OTP Code: ${otp}`);
+    
+    // For now, always return success since SMTP is blocked on Render free tier
+    return { 
+      success: true, 
+      message: `OTP sent successfully. For testing: check server logs for OTP code.` 
+    };
+    
+    // Original email code (commented out due to Render SMTP restrictions)
+    /*
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
     const mailOptions = {
       from: `"ZingChat" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -48,25 +59,10 @@ const sendOTP = async (email, otp) => {
 
     await transporter.sendMail(mailOptions);
     return { success: true, message: 'OTP sent successfully' };
+    */
   } catch (error) {
     console.error('Email send error:', error);
-    
-    // If Gmail fails, try with a simpler configuration
-    try {
-      const simpleTransporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD
-        }
-      });
-      
-      await simpleTransporter.sendMail(mailOptions);
-      return { success: true, message: 'OTP sent successfully (fallback)' };
-    } catch (fallbackError) {
-      console.error('Fallback email error:', fallbackError);
-      return { success: false, message: `Email service unavailable: ${error.message}` };
-    }
+    return { success: false, message: error.message };
   }
 };
 

@@ -528,6 +528,13 @@
         }
 
         showAuthSuccess('OTP sent to your email');
+        
+        // Show additional message for testing
+        const additionalMsg = document.createElement('div');
+        additionalMsg.style.cssText = 'background: #e3f2fd; border: 1px solid #2196f3; color: #1976d2; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.9rem;';
+        additionalMsg.innerHTML = '📧 <strong>For testing:</strong> Check the server logs in Render dashboard for your OTP code, or contact admin for the OTP.';
+        document.getElementById('authSuccess').appendChild(additionalMsg);
+        
         document.getElementById('otpGroup').style.display = 'block';
         document.getElementById('sendOtpBtn').disabled = true;
         document.getElementById('registerEmail').disabled = true;
