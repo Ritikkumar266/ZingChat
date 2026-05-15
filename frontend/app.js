@@ -937,18 +937,6 @@ socket.on('userOffline', (data) => {
 });
 
 // Listen for new private messages
-socket.on('privateMessage', (message) => {
-  const senderId = message.sender?.toString ? message.sender.toString() : message.sender;
-  const receiverId = message.receiver?.toString ? message.receiver.toString() : message.receiver;
-  const selectedId = selectedUserId?.toString ? selectedUserId.toString() : selectedUserId;
-  
-  if (senderId === selectedId || receiverId === selectedId) {
-    displayPrivateMessage(message);
-    scrollToBottom();
-  }
-});
-
-// Listen for private messages via Socket.io
 socket.on('privateMessageReceived', (message) => {
   // Convert to strings for comparison
   const senderId = message.sender?.toString ? message.sender.toString() : message.sender;
@@ -1341,17 +1329,16 @@ async function sendMessage() {
 
       if (response.ok) {
         messageInput.value = '';
-        const message = await response.json();
-        displayGroupMessage(message);
+        // Don't display here - let socket.io handle it for real-time sync
         scrollToBottom();
         
         // Emit via socket
         socket.emit('groupMessage', {
           groupId: selectedGroupId,
-          text: message.text,
-          fileUrl: message.fileUrl,
-          fileName: message.fileName,
-          fileType: message.fileType
+          text: text,
+          fileUrl: null,
+          fileName: null,
+          fileType: null
         });
       } else {
         showNotification('Failed to send message', 'error');
@@ -1380,8 +1367,7 @@ async function sendMessage() {
 
       if (response.ok) {
         messageInput.value = '';
-        const message = await response.json();
-        displayPrivateMessage(message);
+        // Don't display here - let socket.io handle it for real-time sync
         scrollToBottom();
         
         // Emit via Socket.io for real-time delivery
